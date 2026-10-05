@@ -6,7 +6,9 @@ import android.widget.FrameLayout
 import androidx.annotation.IdRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -89,7 +91,12 @@ class CapsuleBottomBar @JvmOverloads constructor(
     private var listener: OnTabSelectedListener? = null
 
     init {
+        // 允许胶囊橡皮筋微移时溢出部分正常绘制，不被宿主裁切。
+        clipChildren = false
+        clipToPadding = false
         val composeView = ComposeView(context).apply {
+            clipChildren = false
+            clipToPadding = false
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
             setContent { Bar() }
@@ -142,6 +149,15 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val density = LocalDensity.current
         val scope = rememberCoroutineScope()
 
+        // APP 刚启动加载时胶囊保持隐藏，首次组合后淡入显示。
+        var barVisible by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { barVisible = true }
+        val barAlpha by animateFloatAsState(
+            targetValue = if (barVisible) 1f else 0f,
+            animationSpec = tween(durationMillis = 280),
+            label = "barAlpha",
+        )
+
         val visible = tabs.filter { it.id in visibleIds.value }
         val count = visible.size.coerceAtLeast(1)
         val sel = selected.intValue.coerceIn(0, tabs.size - 1)
@@ -185,7 +201,10 @@ class CapsuleBottomBar @JvmOverloads constructor(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { translationX = panelOffset },
+                .graphicsLayer {
+                    alpha = barAlpha
+                    translationX = panelOffset
+                },
         ) {
             Row(
                 modifier = Modifier
@@ -224,14 +243,10 @@ class CapsuleBottomBar @JvmOverloads constructor(
                             val next =
                                 (position.value + dragAmount.x / tabWidthPx)
                                     .coerceIn(0f, (count - 1).toFloat())
-                            // 指示器：弹簧追逐手指（不那么跟手）。
-                            scope.launch {
-                                position.animateTo(
-                                    next,
-                                    spring(dampingRatio = 1f, stiffness = 1000f, visibilityThreshold = 0.001f),
-                                )
-                            }
-                            // 橡皮筋：与指示器各自独立协程，避免被挂起的 animateTo 挡住。
+                            // 拖动时实时 snapTo 跟随手指，保证能自由滑到任意 tab；
+                            // 松手后由 onDragEnd 触发平滑吸附到最近 tab。
+                            scope.launch { position.snapTo(next) }
+                            // 橡皮筋：整个胶囊微移。
                             scope.launch {
                                 offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
                             }
