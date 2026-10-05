@@ -15,9 +15,9 @@ import com.fongmi.android.tv.R
 import kotlin.math.roundToInt
 
 /**
- * 毛玻璃背景：实时把本控件背后的内容（宿主里的 ViewPager2 或 overlay）截取本控件所在区域，
- * 缩小后做高斯模糊，裁成胶囊形绘制，再叠一层半透明深色蒙版。
- * 用于胶囊底栏最底层，营造 frosted glass 效果。软件模糊，全版本可用、低开销。
+ * 毛玻璃背景：实时把本控件背后的内容截取本控件所在区域，缩小后模糊，裁成圆角（胶囊/正圆）绘制，
+ * 再叠一层半透明深色蒙版。直接对目标内容 View 做软件绘制（view.draw），只截背后的内容，
+ * 不会把底栏/按钮自身截进去造成越叠越黑的反馈问题。用于胶囊底栏与圆形按钮最底层。
  */
 class BlurBackdrop @JvmOverloads constructor(
     context: Context,
@@ -25,12 +25,12 @@ class BlurBackdrop @JvmOverloads constructor(
     defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
 
-    // 缩小倍数：越小越模糊、越省性能。0.22 → 模糊感很强。
-    private val downscale = 0.22f
-    // 模糊半径（作用在缩小后的位图上），强模糊。
-    private val blurRadius = 16f
-    // 深色蒙版：#242424 @ 55% 不透明（偏深，保证图标清晰）。
-    private val tintColor = Color.argb(140, 0x24, 0x24, 0x24)
+    // 缩小倍数：越小越模糊、越省性能。0.40x 让颗粒更细。
+    private val downscale = 0.40f
+    // 模糊半径（作用在缩小后的位图上）。照搬 KernelSU 液态玻璃的轻模糊（约 4~5dp 等效）。
+    private val blurRadius = 5f
+    // 深色蒙版：#242424 @ 39% 不透明（对齐 KernelSU 的 surfaceContainer @ 40%）。
+    private val tintColor = Color.argb(100, 0x24, 0x24, 0x24)
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
         isFilterBitmap = true
@@ -39,19 +39,20 @@ class BlurBackdrop @JvmOverloads constructor(
     private val path = Path()
     private val rect = RectF()
 
+    // 显示用位图（本控件区域，缩小后已模糊）。
     private var bitmap: Bitmap? = null
     private var bmpCanvas: Canvas? = null
+
     private var target: View? = null
     private val selfLoc = IntArray(2)
     private val targetLoc = IntArray(2)
 
     private val preDrawListener = ViewTreeObserver.OnPreDrawListener {
-        if (target != null && isShown && width > 0 && height > 0) invalidate()
+        if (isShown && width > 0 && height > 0) invalidate()
         true
     }
     private var registeredVto: ViewTreeObserver? = null
 
-    // 外部可指定优先模糊的目标 id（如圆形按钮指定 R.id.pager，因其与按钮为兄弟节点、不含自身）。
     private var preferredId: Int = 0
 
     fun setPreferredTargetId(id: Int) {
@@ -129,18 +130,16 @@ class BlurBackdrop @JvmOverloads constructor(
         bmpCanvas = Canvas(bitmap!!)
         path.reset()
         rect.set(0f, 0f, w.toFloat(), h.toFloat())
-        // 胶囊：圆角半径 = 高度的一半。
         val r = h / 2f
         path.addRoundRect(rect, r, r, Path.Direction.CW)
     }
 
     override fun onDraw(canvas: Canvas) {
-        val bmp = bitmap
+        val bmp = bitmap ?: return
         val bmpC = bmpCanvas
-        if (bmp == null || bmpC == null) return
-
         val t = ensureTarget()
-        if (t != null && t.width > 0 && t.height > 0) {
+        // 把背后内容（目标 View）软件绘制到缩小位图上，再模糊。
+        if (t != null && bmpC != null && t.width > 0 && t.height > 0) {
             register()
             getLocationOnScreen(selfLoc)
             t.getLocationOnScreen(targetLoc)
@@ -153,7 +152,6 @@ class BlurBackdrop @JvmOverloads constructor(
             try {
                 t.draw(bmpC)
             } catch (_: Throwable) {
-                // 某些时机目标尚未就绪，忽略，下一帧重试。
             }
             bmpC.restore()
             stackBlur(bmp, blurRadius)
@@ -161,14 +159,11 @@ class BlurBackdrop @JvmOverloads constructor(
 
         canvas.save()
         canvas.clipPath(path)
-        if (t != null) {
-            canvas.drawBitmap(bmp, null, rect, paint)
-        }
+        canvas.drawBitmap(bmp, null, rect, paint)
         canvas.drawRect(rect, tintPaint)
         canvas.restore()
     }
 
-    /** 快速盒式模糊（3 次水平+垂直遍历近似高斯），作用于整张小位图。 */
     private fun stackBlur(bmp: Bitmap, radius: Float) {
         val r = radius.roundToInt().coerceAtLeast(1)
         val w = bmp.width

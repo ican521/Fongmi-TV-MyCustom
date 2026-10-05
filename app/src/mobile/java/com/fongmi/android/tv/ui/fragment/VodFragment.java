@@ -5,7 +5,9 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.animation.ValueAnimator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,6 +15,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewpager.widget.ViewPager;
 
@@ -65,6 +69,12 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private boolean fabEntered;
     // 按钮入场的起始位移（屏幕右边框之外）。
     private float fabSlidePx;
+    // 顶栏是否已执行过入场动画。
+    private boolean appBarEntered;
+    // 顶栏入场的起始位移（屏幕上边框之外）。
+    private float appBarSlidePx;
+    // 当前选中的分类页签位置（用于滑动指示器）。
+    private int mTypePosition;
 
     public static VodFragment newInstance() {
         return new VodFragment();
@@ -94,6 +104,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         setRecyclerView();
         setViewModel();
         initFabEnter();
+        initAppBarEnter();
         showProgress();
         setTitle();
         setLogo();
@@ -101,11 +112,18 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
 
     /** 按钮初始置于屏幕右边框之外、透明，等待入场动画。 */
     private void initFabEnter() {
-        fabSlidePx = ResUtil.dp2px(240);
+        fabSlidePx = ResUtil.dp2px(280);
         for (View v : new View[]{mBinding.filter, mBinding.link, mBinding.top}) {
             v.setTranslationX(fabSlidePx);
             v.setAlpha(0f);
         }
+    }
+
+    /** 顶栏初始置于屏幕上边框之外、透明，等待入场动画。 */
+    private void initAppBarEnter() {
+        appBarSlidePx = ResUtil.dp2px(180);
+        mBinding.appBar.setTranslationY(-appBarSlidePx);
+        mBinding.appBar.setAlpha(0f);
     }
 
     @Override
@@ -128,6 +146,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             public void onPageSelected(int position) {
                 mBinding.type.smoothScrollToPosition(position);
                 mAdapter.setSelected(position);
+                mTypePosition = position;
+                updateTypeIndicator(true);
                 setFabVisible(position);
             }
         });
@@ -138,6 +158,15 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mBinding.type.setItemAnimator(null);
         mBinding.type.setAdapter(mAdapter = new TypeAdapter(this));
         mBinding.pager.setAdapter(new PageAdapter(getChildFragmentManager()));
+        // 滑动指示器：默认解析为选中色，并在页签滚动/布局变化时实时跟随当前选中项。
+        mBinding.typeIndicator.setSelected(true);
+        mBinding.type.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                updateTypeIndicator(false);
+            }
+        });
+        mBinding.type.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> updateTypeIndicator(false));
     }
 
     private void setViewModel() {
@@ -148,10 +177,61 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private void setAdapter(Result result) {
         mAdapter.addAll(mResult = result);
         mBinding.pager.getAdapter().notifyDataSetChanged();
+        mTypePosition = 0;
         setFabVisible(0);
         revealFabs();
+        revealAppBar();
         hideProgress();
         showContent();
+    }
+
+    /**
+     * 顶部分类页签的滑动指示器：把胶囊背景平滑移动/缩放到当前选中页签的位置与尺寸。
+     *
+     * @param animate true=切换页签时带动画；false=滚动/布局变化时实时跟随（无动画）。
+     */
+    private void updateTypeIndicator(boolean animate) {
+        if (mBinding == null) return;
+        RecyclerView rv = mBinding.type;
+        RecyclerView.LayoutManager lm = rv.getLayoutManager();
+        if (!(lm instanceof LinearLayoutManager)) return;
+        View target = ((LinearLayoutManager) lm).findViewByPosition(mTypePosition);
+        if (target == null || target.getWidth() == 0) return;
+        View indicator = mBinding.typeIndicator;
+        int left = target.getLeft();
+        int top = target.getTop();
+        int width = target.getWidth();
+        int height = target.getHeight();
+        ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+        indicator.animate().cancel();
+        if (indicator.getVisibility() != View.VISIBLE) indicator.setVisibility(View.VISIBLE);
+        if (!animate) {
+            if (lp.width != width || lp.height != height) {
+                lp.width = width;
+                lp.height = height;
+                indicator.setLayoutParams(lp);
+            }
+            indicator.setTranslationX(left);
+            indicator.setTranslationY(top);
+            return;
+        }
+        int fromWidth = lp.width > 0 ? lp.width : width;
+        indicator.animate()
+                .translationX(left)
+                .translationY(top)
+                .setDuration(280)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .start();
+        if (fromWidth != width) {
+            ValueAnimator widthAnim = ValueAnimator.ofInt(fromWidth, width);
+            widthAnim.addUpdateListener(a -> {
+                lp.width = (int) a.getAnimatedValue();
+                indicator.setLayoutParams(lp);
+            });
+            widthAnim.setDuration(280);
+            widthAnim.setInterpolator(new AccelerateDecelerateInterpolator());
+            widthAnim.start();
+        }
     }
 
     /** 应用加载完成后，右下角按钮从屏幕右边框之外带回弹地滑入原位（与底栏 reveal 同时机）。 */
@@ -164,14 +244,13 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             if (v.getVisibility() == View.VISIBLE) {
                 v.setTranslationX(fabSlidePx);
                 v.setAlpha(0f);
-                // 非线性 + 回弹：OvershootInterpolator 先快后慢地逼近，并冲过原点再弹回。
-                // tension 2.2 给出与底栏 spring 相近的明显回弹；依次错开 70ms 让多个按钮错落弹出。
+                // 非线性 + 小幅回弹：tension 1.25 过冲量收小（幅度收敛），800ms 偏慢，错开 90ms 错落。
                 v.animate()
                         .translationX(0f)
                         .alpha(1f)
-                        .setInterpolator(new OvershootInterpolator(2.2f))
-                        .setStartDelay(index * 70L)
-                        .setDuration(520)
+                        .setInterpolator(new OvershootInterpolator(1.25f))
+                        .setStartDelay(index * 90L)
+                        .setDuration(800)
                         .start();
                 index++;
             } else {
@@ -182,9 +261,25 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         }
     }
 
+    /** 顶栏从屏幕上边框之外带回弹地滑入并淡入（与底栏 reveal 同时机，幅度收敛）。 */
+    private void revealAppBar() {
+        if (appBarEntered || mBinding == null) return;
+        appBarEntered = true;
+        View bar = mBinding.appBar;
+        bar.setTranslationY(-appBarSlidePx);
+        bar.setAlpha(0f);
+        bar.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setInterpolator(new OvershootInterpolator(1.2f))
+                .setDuration(800)
+                .start();
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRevealEvent(RevealEvent event) {
         revealFabs();
+        revealAppBar();
     }
 
     private void setFabVisible(int position) {
@@ -338,6 +433,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     public void onItemClick(int position, Class item) {
         mBinding.pager.setCurrentItem(position);
         mAdapter.setSelected(position);
+        mTypePosition = position;
+        updateTypeIndicator(true);
     }
 
     @Override

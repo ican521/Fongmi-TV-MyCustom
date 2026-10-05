@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 顶部分类页签的滑动指示器：与页签同圆角（32dp 胶囊），填充色复用 selector_item，
+     通过 View.setSelected(true) 自动解析为选中态颜色，与现有选中页签颜色完全一致。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/selector_item" />
+    <corners android:radius="32dp" />
+</shape>

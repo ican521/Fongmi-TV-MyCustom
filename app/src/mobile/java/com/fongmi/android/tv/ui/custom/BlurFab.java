@@ -50,6 +50,9 @@ public class BlurFab extends FrameLayout {
         iconLp.gravity = Gravity.CENTER;
         addView(mIcon, iconLp);
 
+        // 最上层：与底栏一致的亮色描边（白色 12%、1dp），作为前景覆盖在图标之上。
+        setForeground(ContextCompat.getDrawable(context, R.drawable.bg_fab_stroke));
+
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BlurFab);
             try {

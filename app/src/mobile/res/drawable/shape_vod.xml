@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 点播卡片：按下 30% 浅灰渐显、抬起渐隐（无波纹），保持 8dp 圆角。 -->
+<!-- 点播卡片：按下 30% 浅灰渐显、抬起渐隐（无波纹），保持 14dp 圆角。 -->
 <animated-selector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt">
 
@@ -7,7 +7,7 @@
         <aapt:attr name="android:drawable">
             <shape android:shape="rectangle">
                 <solid android:color="@android:color/transparent" />
-                <corners android:radius="8dp" />
+                <corners android:radius="14dp" />
             </shape>
         </aapt:attr>
     </item>
@@ -16,7 +16,7 @@
         <aapt:attr name="android:drawable">
             <shape android:shape="rectangle">
                 <solid android:color="@color/press_overlay" />
-                <corners android:radius="8dp" />
+                <corners android:radius="14dp" />
             </shape>
         </aapt:attr>
     </item>
@@ -26,12 +26,12 @@
         android:toId="@id/pressed"
         android:reversible="true">
         <animation-list android:oneshot="true">
-            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f0" /><corners android:radius="8dp" /></shape></aapt:attr></item>
-            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f1" /><corners android:radius="8dp" /></shape></aapt:attr></item>
-            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f2" /><corners android:radius="8dp" /></shape></aapt:attr></item>
-            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f3" /><corners android:radius="8dp" /></shape></aapt:attr></item>
-            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f4" /><corners android:radius="8dp" /></shape></aapt:attr></item>
-            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_overlay" /><corners android:radius="8dp" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f0" /><corners android:radius="14dp" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f1" /><corners android:radius="14dp" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f2" /><corners android:radius="14dp" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f3" /><corners android:radius="14dp" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_f4" /><corners android:radius="14dp" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="rectangle"><solid android:color="@color/press_overlay" /><corners android:radius="14dp" /></shape></aapt:attr></item>
         </animation-list>
     </transition>
 

@@ -162,15 +162,14 @@ class CapsuleBottomBar @JvmOverloads constructor(
         // 启动加载期间胶囊隐藏在屏幕底部之外；宿主调用 reveal() 后，整体向上平移回原位并淡入。
         val slide = remember { Animatable(1f) }
         val barAlpha = remember { Animatable(0f) }
-        // 位移距离 = 胶囊高度(64dp) + 底部外边距(20dp)，确保初始完全在屏幕之外不可见。
-        val slideDistancePx = with(density) { 84.dp.toPx() }
+        // 位移距离 = 胶囊高度(64dp) + 底部外边距(20dp) + 小幅余量，行程适中。
+        val slideDistancePx = with(density) { 92.dp.toPx() }
         val shouldReveal = revealRequested.value
         LaunchedEffect(shouldReveal) {
             if (shouldReveal) {
-                // 非线性 + 回弹：spring 阻尼比 <1 会过冲，胶囊会略微超过原位再弹回。
-                // 阻尼比 0.5 给出明显但克制的回弹；stiffness 控制整体节奏（约 400ms 级）。
-                launch { slide.animateTo(0f, spring(dampingRatio = 0.5f, stiffness = 320f)) }
-                launch { barAlpha.animateTo(1f, tween(durationMillis = 320)) }
+                // 非线性 + 小幅回弹：dampingRatio 0.62 → 过冲量小（幅度收敛），stiffness 260 节奏偏慢。
+                launch { slide.animateTo(0f, spring(dampingRatio = 0.62f, stiffness = 260f)) }
+                launch { barAlpha.animateTo(1f, tween(durationMillis = 500)) }
             }
         }
 
