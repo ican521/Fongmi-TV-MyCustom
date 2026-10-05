@@ -27,12 +27,12 @@
     <color name="white_80">#CCFFFFFF</color>
     <color name="white_90">#E6FFFFFF</color>
 
-    <!-- 按压高亮：30% 透明 #242424（用于点击特效覆盖层，渐显渐隐） -->
-    <color name="press_overlay">#4D242424</color>
-    <color name="press_f0">#0D242424</color>
-    <color name="press_f1">#1A242424</color>
-    <color name="press_f2">#26242424</color>
-    <color name="press_f3">#33242424</color>
-    <color name="press_f4">#40242424</color>
+    <!-- 按压高亮：30% 透明 #383838（RGB 56,56,56，用于点击特效覆盖层，渐显渐隐） -->
+    <color name="press_overlay">#4D383838</color>
+    <color name="press_f0">#0D383838</color>
+    <color name="press_f1">#1A383838</color>
+    <color name="press_f2">#26383838</color>
+    <color name="press_f3">#33383838</color>
+    <color name="press_f4">#40383838</color>
 
 </resources>
