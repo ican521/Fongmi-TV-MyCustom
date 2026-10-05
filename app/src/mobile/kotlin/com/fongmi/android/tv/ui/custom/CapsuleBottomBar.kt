@@ -92,6 +92,14 @@ class CapsuleBottomBar @JvmOverloads constructor(
     private val selected = mutableIntStateOf(0)
     private var listener: OnTabSelectedListener? = null
 
+    // 启动加载完成后由宿主置 true，触发整个胶囊从屏幕底部外向上平移回位的入场动画。
+    private val revealRequested = mutableStateOf(false)
+
+    /** 启动加载完成后调用：底栏从屏幕底部之外向上平移进入原位。 */
+    fun reveal() {
+        revealRequested.value = true
+    }
+
     init {
         // 允许胶囊橡皮筋微移时溢出部分正常绘制，不被宿主裁切。
         clipChildren = false
@@ -151,14 +159,18 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val density = LocalDensity.current
         val scope = rememberCoroutineScope()
 
-        // APP 刚启动加载时胶囊保持隐藏，首次组合后淡入显示。
-        var barVisible by remember { mutableStateOf(false) }
-        LaunchedEffect(Unit) { barVisible = true }
-        val barAlpha by animateFloatAsState(
-            targetValue = if (barVisible) 1f else 0f,
-            animationSpec = tween(durationMillis = 280),
-            label = "barAlpha",
-        )
+        // 启动加载期间胶囊隐藏在屏幕底部之外；宿主调用 reveal() 后，整体向上平移回原位并淡入。
+        val slide = remember { Animatable(1f) }
+        val barAlpha = remember { Animatable(0f) }
+        // 位移距离 = 胶囊高度(64dp) + 底部外边距(20dp)，确保初始完全在屏幕之外不可见。
+        val slideDistancePx = with(density) { 84.dp.toPx() }
+        val shouldReveal = revealRequested.value
+        LaunchedEffect(shouldReveal) {
+            if (shouldReveal) {
+                launch { slide.animateTo(0f, tween(durationMillis = 420, easing = EaseOut)) }
+                launch { barAlpha.animateTo(1f, tween(durationMillis = 320)) }
+            }
+        }
 
         val visible = tabs.filter { it.id in visibleIds.value }
         val count = visible.size.coerceAtLeast(1)
@@ -209,8 +221,9 @@ class CapsuleBottomBar @JvmOverloads constructor(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    alpha = barAlpha
+                    alpha = barAlpha.value
                     translationX = panelOffset
+                    translationY = slide.value * slideDistancePx
                 },
             contentAlignment = Alignment.Center,
         ) {

@@ -149,15 +149,22 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
             @Override
             public void success() {
                 checkAction(getIntent());
+                revealNavigation();
             }
 
             @Override
             public void error(String msg) {
                 checkAction(getIntent());
+                revealNavigation();
                 StateEvent.empty();
                 Notify.show(msg);
             }
         };
+    }
+
+    /** 加载完成后让胶囊底栏从屏幕底部之外向上平移进入。 */
+    private void revealNavigation() {
+        if (mBinding != null && mBinding.navigation != null) mBinding.navigation.reveal();
     }
 
     private void setNavigation() {
