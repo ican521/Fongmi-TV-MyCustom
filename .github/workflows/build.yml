@@ -22,7 +22,7 @@ jobs:
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n1)
           echo "Using sdkmanager: $SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "platform-tools" "platforms;android-37"
+          "$SDKMANAGER" "platform-tools" || true
 
       - name: Create local.properties
         run: |
