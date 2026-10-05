@@ -111,6 +111,7 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
 
     private void initFragment(Bundle savedInstanceState) {
         mPager = mBinding.container;
+        mPager.setUserInputEnabled(false);
         mPager.setAdapter(new HomePagerAdapter(getSupportFragmentManager(), getLifecycle()));
         mPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
@@ -159,10 +160,12 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
     public void change(int position) {
         if (position < 3) {
             mManager.clear();
+            mBinding.overlay.setVisibility(View.GONE);
             mPager.setCurrentItem(position, true);
             mBinding.navigation.setSelected(position, true);
         } else {
             mManager.change(position);
+            mBinding.overlay.setVisibility(View.VISIBLE);
         }
     }
 

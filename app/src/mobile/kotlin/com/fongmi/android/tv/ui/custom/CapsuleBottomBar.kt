@@ -1,28 +1,27 @@
 package com.fongmi.android.tv.ui.custom
 
 import android.content.Context
-import android.graphics.Outline
 import android.util.AttributeSet
-import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.annotation.IdRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +35,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon
@@ -57,11 +56,13 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * 悬浮胶囊底栏（Compose 实现）。
- *
- * 忠实移植参考项目 KernelSU 的弹簧物理手感：指示器位置由 Animatable + spring 驱动，
- * 按速度拉伸（scaleX），并支持横向拖动切换。对外 API 与原 Java 版完全一致，
- * HomeActivity 无需改动。视觉采用纯色胶囊（参考项目的 isBlurEnabled=false 分支）。
+ * 悬浮胶囊底栏（Compose），视觉/尺寸/阴影/指示器照搬参考项目 KernelSU 的
+ * FloatingBottomBar（isBlurEnabled=false 分支）：
+ *  - 胶囊高 64dp、内边距 4dp、指示器高 56dp
+ *  - 阴影 dropShadow：半径 10dp、黑色、alpha 0.1（暗色 0.2）
+ *  - 容器色取主题 colorSurface、指示器取 colorPrimary.copy(alpha=0.15)
+ *  - 未选中文字/图标 colorOnSurface，选中 colorPrimary
+ * 手感沿用弹簧物理（Animatable + spring）+ 速度拉伸 + 横向拖动。
  */
 class CapsuleBottomBar @JvmOverloads constructor(
     context: Context,
@@ -86,14 +87,6 @@ class CapsuleBottomBar @JvmOverloads constructor(
     private var listener: OnTabSelectedListener? = null
 
     init {
-        // 让 elevation 阴影按胶囊圆角绘制，而不是矩形轮廓
-        clipToOutline = false
-        outlineProvider = object : ViewOutlineProvider() {
-            override fun getOutline(view: android.view.View, outline: Outline) {
-                val radius = view.height / 2f
-                outline.setRoundRect(0, 0, view.width, view.height, radius)
-            }
-        }
         val composeView = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -126,10 +119,14 @@ class CapsuleBottomBar @JvmOverloads constructor(
     fun isTabVisible(@IdRes id: Int): Boolean = visibleIds.value.contains(id)
 
     @Composable
-    private fun accentColor(): Color {
-        val ta = context.obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.colorPrimary))
+    private fun themeColor(attrName: String, default: Int): Color {
+        val res = context.resources
+        var id = res.getIdentifier(attrName, "attr", "android")
+        if (id == 0) id = res.getIdentifier(attrName, "attr", context.packageName)
+        if (id == 0) return Color(default)
+        val ta = context.obtainStyledAttributes(intArrayOf(id))
         return try {
-            Color(ta.getColor(0, 0xFF6750A4.toInt()))
+            Color(ta.getColor(0, default))
         } finally {
             ta.recycle()
         }
@@ -137,7 +134,9 @@ class CapsuleBottomBar @JvmOverloads constructor(
 
     @Composable
     private fun Bar() {
-        val accent = accentColor()
+        val accent = themeColor("colorPrimary", 0xFF6750A4.toInt())
+        val containerColor = themeColor("colorSurface", 0xFF1B1B1F.toInt()).copy(alpha = 0.95f)
+        val onSurface = themeColor("colorOnSurface", 0xFFE6E6E6.toInt())
         val density = LocalDensity.current
         val scope = rememberCoroutineScope()
 
@@ -145,18 +144,17 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val count = visible.size.coerceAtLeast(1)
         val sel = selected.intValue.coerceIn(0, tabs.size - 1)
 
-        var widthPx by remember { mutableFloatStateOf(0f) }
-        val tabWidth = widthPx / count
+        var totalWidthPx by remember { mutableFloatStateOf(0f) }
+        val contentInsetPx = with(density) { 8.dp.toPx() }
+        val tabWidthPx = (totalWidthPx - contentInsetPx) / count
 
         val position = remember { Animatable(sel.toFloat(), 0.001f) }
         val stretch = remember { Animatable(1f, 0.001f) }
         var dragNonce by remember { mutableIntStateOf(0) }
 
-        // 选中/拖动结束都驱动指示器弹簧归位
         LaunchedEffect(sel, count, dragNonce) {
             position.animateTo(sel.toFloat(), spring(dampingRatio = 1f, stiffness = 1000f))
         }
-        // 按速度拉伸，让「弹一下」更明显
         LaunchedEffect(Unit) {
             snapshotFlow { position.velocity }.collect { v ->
                 val target = (1f + (abs(v) / count) * 0.3f).coerceIn(1f, 1.4f)
@@ -164,59 +162,52 @@ class CapsuleBottomBar @JvmOverloads constructor(
             }
         }
 
-        val containerColor = Color(0xCC1B1B1F)
-        val indicatorColor = accent.copy(alpha = 0.28f)
-        val pill = RoundedCornerShape(percent = 50)
-        val onColor = Color(0xFFE6E6E6)
+        val pill = CircleShape
+        val indicatorColor = accent.copy(alpha = 0.15f)
 
+        // 外层留白，给阴影留出绘制空间
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(pill)
-                .background(containerColor)
-                .onSizeChanged { widthPx = it.width.toFloat() }
-                .pointerInput(count) {
-                    if (count <= 1) return@pointerInput
-                    detectDragGestures(
-                        onDragEnd = {
-                            val idx = position.value.roundToInt().coerceIn(0, count - 1)
-                            val real = visible.getOrNull(idx)?.let { tabs.indexOf(it) } ?: sel
-                            if (real != selected.intValue) {
-                                selected.intValue = real
-                                listener?.onTabSelected(real)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+        ) {
+            // 胶囊本体（含 tab）
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onSizeChanged { totalWidthPx = it.width.toFloat() }
+                    .shadow(elevation = 10.dp, shape = pill, clip = false)
+                    .background(containerColor, pill)
+                    .pointerInput(count) {
+                        if (count <= 1) return@pointerInput
+                        detectDragGestures(
+                            onDragEnd = {
+                                val idx = position.value.roundToInt().coerceIn(0, count - 1)
+                                val real = visible.getOrNull(idx)?.let { tabs.indexOf(it) } ?: sel
+                                if (real != selected.intValue) {
+                                    selected.intValue = real
+                                    listener?.onTabSelected(real)
+                                }
+                                dragNonce++
+                            },
+                            onDragCancel = { dragNonce++ },
+                        ) { change, dragAmount ->
+                            change.consume()
+                            scope.launch {
+                                val next =
+                                    (position.value + dragAmount.x / tabWidthPx)
+                                        .coerceIn(0f, (count - 1).toFloat())
+                                position.snapTo(next)
                             }
-                            dragNonce++
-                        },
-                        onDragCancel = { dragNonce++ },
-                    ) { change, dragAmount ->
-                        change.consume()
-                        scope.launch {
-                            val next =
-                                (position.value + dragAmount.x / tabWidth)
-                                    .coerceIn(0f, (count - 1).toFloat())
-                            position.snapTo(next)
                         }
                     }
-                },
-        ) {
-            // 指示器：与 tab 等宽对齐，避免末项被裁切
-            if (widthPx > 0f) {
-                val indicatorDp = with(density) { tabWidth.toDp() }
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .width(indicatorDp)
-                        .offset { IntOffset((position.value * tabWidth).roundToInt(), 0) }
-                        .fillMaxHeight()
-                        .graphicsLayer { scaleX = stretch.value }
-                        .clip(pill)
-                        .background(indicatorColor),
-                )
-            }
-
-            Row(modifier = Modifier.fillMaxSize()) {
+                    .height(64.dp)
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 visible.forEach { tab ->
                     val isSel = tabs.indexOf(tab) == sel
+                    val tint = if (isSel) accent else onSurface
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -229,22 +220,40 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalArrangement = Arrangement.spacedBy(1.dp, Alignment.CenterVertically),
                         ) {
                             Icon(
                                 painter = painterResource(tab.icon),
                                 contentDescription = null,
-                                tint = if (isSel) accent else onColor,
-                                modifier = Modifier.size(23.dp),
+                                tint = tint,
+                                modifier = Modifier.size(24.dp),
                             )
                             Text(
                                 text = stringResource(tab.label),
-                                color = if (isSel) accent else onColor,
-                                fontSize = 10.sp,
+                                color = tint,
+                                fontSize = 11.sp,
                             )
                         }
                     }
                 }
+            }
+
+            // 指示器：照搬参考（高 56dp、accent@15%、圆角胶囊、按速度拉伸）
+            if (totalWidthPx > 0f && tabWidthPx > 0f) {
+                val tabWidthDp = with(density) { tabWidthPx.toDp() }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(horizontal = 4.dp)
+                        .graphicsLayer {
+                            translationX = position.value * tabWidthPx
+                            scaleX = stretch.value
+                        }
+                        .width(tabWidthDp)
+                        .height(56.dp)
+                        .clip(pill)
+                        .background(indicatorColor, pill),
+                )
             }
         }
     }
