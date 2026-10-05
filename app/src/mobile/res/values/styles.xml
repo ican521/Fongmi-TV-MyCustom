@@ -1,5 +1,11 @@
 <resources>
 
+    <!-- FAB 强制正圆：50% 圆角，覆盖 Material3 默认的圆角方形（squircle）。 -->
+    <style name="ShapeAppearance.Fab.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
     <style name="Theme.Base" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
         <!-- 默认 APP 背景：纯黑，保证所有页面（含播放页）都有统一兜底底色。 -->
         <item name="android:windowBackground">@color/black</item>
