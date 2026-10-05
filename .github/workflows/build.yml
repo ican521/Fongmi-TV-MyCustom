@@ -1,7 +1,7 @@
 name: Build Fongmi Debug APK
 on:
   push:
-    branches: [ main ]
+    branches: [ fongmi, main ]
   workflow_dispatch:
 
 jobs:
@@ -20,14 +20,21 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "storeFile=debug.keystore" >> local.properties
+          echo "keyAlias=androiddebugkey" >> local.properties
+          echo "storePassword=android" >> local.properties
+
       - name: Grant gradlew permission
         run: chmod +x gradlew
 
-      - name: Run assembleDebug
-        run: ./gradlew assembleDebug
+      - name: Run assembleMobileDebug
+        run: ./gradlew assembleMobileDebug
 
       - name: Upload debug apk
         uses: actions/upload-artifact@v4
         with:
           name: Fongmi-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/mobile/debug/*.apk
