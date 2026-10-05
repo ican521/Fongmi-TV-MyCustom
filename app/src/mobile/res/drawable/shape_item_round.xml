@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="?attr/colorControlHighlight">
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#33FFFFFF" />
+            <corners android:radius="28dp" />
+            <padding
+                android:bottom="6dp"
+                android:left="12dp"
+                android:right="12dp"
+                android:top="6dp" />
+        </shape>
+    </item>
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/selector_item" />
@@ -12,10 +22,4 @@
                 android:top="6dp" />
         </shape>
     </item>
-    <item android:id="@android:id/mask">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/white" />
-            <corners android:radius="28dp" />
-        </shape>
-    </item>
-</ripple>
+</selector>

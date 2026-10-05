@@ -81,7 +81,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
 
     private void setOtherText() {
         mBinding.dohText.setText(getDohList()[getDohIndex()]);
-        mBinding.incognitoText.setText(Setting.getSwitch(Setting.isIncognito()));
+        mBinding.incognitoSwitch.setChecked(Setting.isIncognito());
         mBinding.sizeText.setText((size = ResUtil.getStringArray(R.array.select_size))[PlayerSetting.getSize()]);
     }
 
@@ -214,7 +214,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
 
     private void setIncognito(View view) {
         Setting.putIncognito(!Setting.isIncognito());
-        mBinding.incognitoText.setText(Setting.getSwitch(Setting.isIncognito()));
+        mBinding.incognitoSwitch.setChecked(Setting.isIncognito());
     }
 
     private void setSize(View view) {

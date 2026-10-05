@@ -11,7 +11,14 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
     </style>
 
-    <style name="Theme.App" parent="Theme.Base" />
+    <style name="Theme.App" parent="Theme.Base">
+        <!-- 去除所有水波纹：高亮色置透明，selectableItemBackground 改为按下浅灰（无波纹动画）。 -->
+        <item name="android:colorControlHighlight">@android:color/transparent</item>
+        <item name="android:selectableItemBackground">@drawable/bg_press</item>
+        <item name="selectableItemBackground">@drawable/bg_press</item>
+        <item name="android:selectableItemBackgroundBorderless">@drawable/bg_press</item>
+        <item name="selectableItemBackgroundBorderless">@drawable/bg_press</item>
+    </style>
 
     <style name="Theme.Crash" parent="Theme.Base">
         <item name="android:windowDisablePreview">true</item>

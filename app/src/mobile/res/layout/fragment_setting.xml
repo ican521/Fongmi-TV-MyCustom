@@ -145,14 +145,21 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/shape_item"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:text="@string/setting_player"
                     android:textColor="@color/white"
                     android:textSize="16sp" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arrow_right" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -162,24 +169,23 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/shape_item"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
+                    android:layout_weight="1"
                     android:text="@string/setting_incognito"
                     android:textColor="@color/white"
                     android:textSize="16sp" />
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/incognitoText"
-                    android:layout_width="match_parent"
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/incognitoSwitch"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    tools:text="Off" />
+                    android:clickable="false"
+                    android:focusable="false" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
