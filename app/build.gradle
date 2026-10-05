@@ -3,7 +3,6 @@ import com.fongmi.gradle.AbiApkPackaging
 
 plugins {
     alias libs.plugins.android.application
-    alias libs.plugins.kotlin.android
 }
 
 def localProps = new Properties()
