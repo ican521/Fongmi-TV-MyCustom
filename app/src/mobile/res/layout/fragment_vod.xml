@@ -67,55 +67,49 @@
         layout="@layout/view_progress"
         android:visibility="gone" />
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <com.fongmi.android.tv.ui.custom.BlurFab
         android:id="@+id/filter"
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="88dp"
-        android:background="@drawable/bg_fab"
-        android:padding="16dp"
         android:visibility="gone"
         app:layout_anchor="@id/pager"
         app:layout_anchorGravity="end|bottom"
         app:layout_behavior="com.fongmi.android.tv.ui.custom.CustomFabBehavior"
-        app:srcCompat="@drawable/ic_fab_filter"
-        app:tint="?attr/colorOnSurface"
+        app:fabSrc="@drawable/ic_fab_filter"
+        app:fabTint="?attr/colorOnSurface"
         tools:visibility="visible" />
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <com.fongmi.android.tv.ui.custom.BlurFab
         android:id="@+id/link"
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="88dp"
-        android:background="@drawable/bg_fab"
-        android:padding="16dp"
         app:layout_anchor="@id/pager"
         app:layout_anchorGravity="end|bottom"
         app:layout_behavior="com.fongmi.android.tv.ui.custom.CustomFabBehavior"
-        app:srcCompat="@drawable/ic_fab_link"
-        app:tint="?attr/colorOnSurface"
+        app:fabSrc="@drawable/ic_fab_link"
+        app:fabTint="?attr/colorOnSurface"
         tools:visibility="visible" />
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <com.fongmi.android.tv.ui.custom.BlurFab
         android:id="@+id/top"
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="88dp"
-        android:background="@drawable/bg_fab"
-        android:padding="16dp"
         android:tag="top"
         android:visibility="invisible"
         app:layout_anchor="@id/pager"
         app:layout_anchorGravity="end|bottom"
         app:layout_behavior="com.fongmi.android.tv.ui.custom.CustomFabBehavior"
-        app:srcCompat="@drawable/ic_fab_top"
-        app:tint="?attr/colorOnSurface"
+        app:fabSrc="@drawable/ic_fab_top"
+        app:fabTint="?attr/colorOnSurface"
         tools:visibility="visible" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

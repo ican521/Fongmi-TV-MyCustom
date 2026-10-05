@@ -167,7 +167,9 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val shouldReveal = revealRequested.value
         LaunchedEffect(shouldReveal) {
             if (shouldReveal) {
-                launch { slide.animateTo(0f, tween(durationMillis = 420, easing = EaseOut)) }
+                // 非线性 + 回弹：spring 阻尼比 <1 会过冲，胶囊会略微超过原位再弹回。
+                // 阻尼比 0.5 给出明显但克制的回弹；stiffness 控制整体节奏（约 400ms 级）。
+                launch { slide.animateTo(0f, spring(dampingRatio = 0.5f, stiffness = 320f)) }
                 launch { barAlpha.animateTo(1f, tween(durationMillis = 320)) }
             }
         }

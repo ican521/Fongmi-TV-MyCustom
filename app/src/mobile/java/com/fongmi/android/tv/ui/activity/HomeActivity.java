@@ -31,6 +31,7 @@ import com.fongmi.android.tv.databinding.ActivityHomeBinding;
 import com.fongmi.android.tv.db.BackupManager;
 import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
+import com.fongmi.android.tv.event.RevealEvent;
 import com.fongmi.android.tv.event.ServerEvent;
 import com.fongmi.android.tv.event.StateEvent;
 import com.fongmi.android.tv.impl.Callback;
@@ -162,9 +163,10 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
         };
     }
 
-    /** 加载完成后让胶囊底栏从屏幕底部之外向上平移进入。 */
+    /** 加载完成后让胶囊底栏从屏幕底部之外向上平移进入，同时触发右下角按钮的入场动画。 */
     private void revealNavigation() {
         if (mBinding != null && mBinding.navigation != null) mBinding.navigation.reveal();
+        RevealEvent.post();
     }
 
     private void setNavigation() {

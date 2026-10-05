@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 圆形毛玻璃按钮的按下反馈：平时完全透明（露出底层毛玻璃），按下时叠加一层 #383838 按下色，无波纹。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <solid android:color="@color/press_overlay" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/transparent" />
+        </shape>
+    </item>
+
+</selector>

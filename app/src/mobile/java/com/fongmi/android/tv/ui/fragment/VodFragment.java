@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +27,7 @@ import com.fongmi.android.tv.databinding.FragmentVodBinding;
 import com.fongmi.android.tv.event.CastEvent;
 import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
+import com.fongmi.android.tv.event.RevealEvent;
 import com.fongmi.android.tv.event.StateEvent;
 import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.impl.ConfigListener;
@@ -59,6 +61,10 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private SiteViewModel mViewModel;
     private TypeAdapter mAdapter;
     private Result mResult;
+    // 右下角按钮是否已执行过入场动画。
+    private boolean fabEntered;
+    // 按钮入场的起始位移（屏幕右边框之外）。
+    private float fabSlidePx;
 
     public static VodFragment newInstance() {
         return new VodFragment();
@@ -87,9 +93,19 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mBinding.title.setSelected(true);
         setRecyclerView();
         setViewModel();
+        initFabEnter();
         showProgress();
         setTitle();
         setLogo();
+    }
+
+    /** 按钮初始置于屏幕右边框之外、透明，等待入场动画。 */
+    private void initFabEnter() {
+        fabSlidePx = ResUtil.dp2px(240);
+        for (View v : new View[]{mBinding.filter, mBinding.link, mBinding.top}) {
+            v.setTranslationX(fabSlidePx);
+            v.setAlpha(0f);
+        }
     }
 
     @Override
@@ -133,8 +149,42 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mAdapter.addAll(mResult = result);
         mBinding.pager.getAdapter().notifyDataSetChanged();
         setFabVisible(0);
+        revealFabs();
         hideProgress();
         showContent();
+    }
+
+    /** 应用加载完成后，右下角按钮从屏幕右边框之外带回弹地滑入原位（与底栏 reveal 同时机）。 */
+    private void revealFabs() {
+        if (fabEntered || mBinding == null) return;
+        fabEntered = true;
+        View[] fabs = {mBinding.filter, mBinding.link, mBinding.top};
+        int index = 0;
+        for (View v : fabs) {
+            if (v.getVisibility() == View.VISIBLE) {
+                v.setTranslationX(fabSlidePx);
+                v.setAlpha(0f);
+                // 非线性 + 回弹：OvershootInterpolator 先快后慢地逼近，并冲过原点再弹回。
+                // tension 2.2 给出与底栏 spring 相近的明显回弹；依次错开 70ms 让多个按钮错落弹出。
+                v.animate()
+                        .translationX(0f)
+                        .alpha(1f)
+                        .setInterpolator(new OvershootInterpolator(2.2f))
+                        .setStartDelay(index * 70L)
+                        .setDuration(520)
+                        .start();
+                index++;
+            } else {
+                // 尚未显示的按钮复位变换，避免之后出现时停在屏幕外。
+                v.setTranslationX(0f);
+                v.setAlpha(1f);
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRevealEvent(RevealEvent event) {
+        revealFabs();
     }
 
     private void setFabVisible(int position) {

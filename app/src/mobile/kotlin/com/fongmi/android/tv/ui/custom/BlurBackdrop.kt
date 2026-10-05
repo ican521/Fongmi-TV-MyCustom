@@ -51,11 +51,30 @@ class BlurBackdrop @JvmOverloads constructor(
     }
     private var registeredVto: ViewTreeObserver? = null
 
+    // 外部可指定优先模糊的目标 id（如圆形按钮指定 R.id.pager，因其与按钮为兄弟节点、不含自身）。
+    private var preferredId: Int = 0
+
+    fun setPreferredTargetId(id: Int) {
+        if (preferredId != id) {
+            preferredId = id
+            target = null
+            unregister()
+            invalidate()
+        }
+    }
+
     private fun ensureTarget(): View? {
         target?.let { if (it.isAttachedToWindow) return it }
         var p: android.view.ViewParent? = parent
         while (p != null) {
             if (p is ViewGroup) {
+                if (preferredId != 0) {
+                    val pref = p.findViewById<View>(preferredId)
+                    if (pref != null && pref.width > 0 && pref.height > 0) {
+                        target = pref
+                        return pref
+                    }
+                }
                 val overlay = p.findViewById<View>(R.id.overlay)
                 if (overlay != null && overlay.visibility == View.VISIBLE && overlay.width > 0) {
                     target = overlay
