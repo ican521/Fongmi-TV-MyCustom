@@ -20,6 +20,8 @@
         <item name="selectableItemBackground">@drawable/bg_press</item>
         <item name="android:selectableItemBackgroundBorderless">@drawable/bg_press</item>
         <item name="selectableItemBackgroundBorderless">@drawable/bg_press</item>
+        <!-- 允许内容延伸到刘海/挖孔区域（原 v27 专属配置，合并到此处避免覆盖丢失）。 -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
     <style name="Theme.Crash" parent="Theme.Base">
