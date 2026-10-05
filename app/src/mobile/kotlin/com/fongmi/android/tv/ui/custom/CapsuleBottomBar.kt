@@ -180,16 +180,18 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val pill = CircleShape
         val indicatorColor = accent.copy(alpha = 0.15f)
 
-        // 胶囊本体（含 tab）
+        // 胶囊本体（含 tab + 指示器）。panelOffset 加在最外层，拖动时整个胶囊
+        // （背景 + 图标文字 + 指示器）作为一个刚体做橡皮筋微移，图标文字不会单独滑动。
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { translationX = panelOffset },
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .onSizeChanged { totalWidthPx = it.width.toFloat() }
                     .background(containerColor, pill)
-                    .graphicsLayer { translationX = panelOffset }
                     .pointerInput(count) {
                         if (count <= 1) return@pointerInput
                         detectDragGestures(
@@ -219,18 +221,18 @@ class CapsuleBottomBar @JvmOverloads constructor(
                             },
                         ) { change, dragAmount ->
                             change.consume()
+                            val next =
+                                (position.value + dragAmount.x / tabWidthPx)
+                                    .coerceIn(0f, (count - 1).toFloat())
+                            // 指示器：弹簧追逐手指（不那么跟手）。
                             scope.launch {
-                                val next =
-                                    (position.value + dragAmount.x / tabWidthPx)
-                                        .coerceIn(0f, (count - 1).toFloat())
-                                // 照搬参考项目 DampedDragAnimation.valueAnimationSpec：
-                                // 拖动时用 spring 追逐目标，而非 snapTo 瞬间贴合，
-                                // 让指示器带轻微延迟/阻尼地跟随手指，不再过于跟手。
                                 position.animateTo(
                                     next,
                                     spring(dampingRatio = 1f, stiffness = 1000f, visibilityThreshold = 0.001f),
                                 )
-                                // 整个胶囊橡皮筋微移：随拖动累积，松手弹回。
+                            }
+                            // 橡皮筋：与指示器各自独立协程，避免被挂起的 animateTo 挡住。
+                            scope.launch {
                                 offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
                             }
                         }
@@ -281,7 +283,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
                         .align(Alignment.CenterStart)
                         .padding(horizontal = 4.dp)
                         .graphicsLayer {
-                            translationX = position.value * tabWidthPx + panelOffset
+                            translationX = position.value * tabWidthPx
                             scaleX = stretch.value
                         }
                         .width(tabWidthDp)
