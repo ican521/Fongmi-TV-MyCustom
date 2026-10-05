@@ -154,7 +154,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
     @Composable
     private fun Bar() {
         val accent = themeColor("colorPrimary", 0xFF6750A4.toInt())
-        val containerColor = themeColor("colorSurface", 0xFF1B1B1F.toInt()).copy(alpha = 0.95f)
+        val containerColor = Color(0xFF242424)
         val onSurface = themeColor("colorOnSurface", 0xFFE6E6E6.toInt())
         val density = LocalDensity.current
         val scope = rememberCoroutineScope()
