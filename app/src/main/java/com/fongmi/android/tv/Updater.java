@@ -1,5 +1,6 @@
 package com.fongmi.android.tv;
 
+import android.text.TextUtils;
 import android.view.View;
 
 import androidx.fragment.app.FragmentActivity;
@@ -16,17 +17,18 @@ import com.fongmi.android.tv.utils.Task;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Path;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
 
 public class Updater implements Download.Callback, UpdateListener {
 
-    private final Download download;
+    private Download download;
     private UpdateDialog dialog;
+    private String apkUrl;
 
     private Updater() {
-        this.download = Download.create(getApk(), getFile());
     }
 
     public static Updater create() {
@@ -37,12 +39,8 @@ public class Updater implements Download.Callback, UpdateListener {
         return Path.cache("update.apk");
     }
 
-    private String getJson() {
-        return Github.getJson(BuildConfig.FLAVOR);
-    }
-
-    private String getApk() {
-        return Github.getApk(BuildConfig.FLAVOR + "-" + (android.os.Process.is64Bit() ? "arm64_v8a" : "armeabi_v7a"));
+    private String getApkName() {
+        return BuildConfig.FLAVOR + "-" + (android.os.Process.is64Bit() ? "arm64_v8a" : "armeabi_v7a") + ".apk";
     }
 
     public Updater force() {
@@ -58,15 +56,48 @@ public class Updater implements Download.Callback, UpdateListener {
 
     private void doInBackground(FragmentActivity activity) {
         try {
-            JSONObject object = new JSONObject(OkHttp.string(getJson()));
-            String name = object.optString("name");
-            String desc = object.optString("desc");
-            int code = object.optInt("code");
+            JSONObject object = new JSONObject(OkHttp.string(Github.getRelease()));
+            // tag_name 约定为纯数字版本号（与 versionCode 比较），例如 564。
+            int code = parseCode(object.optString("tag_name"));
             if (code <= BuildConfig.VERSION_CODE) return;
-            App.post(() -> show(activity, name, desc));
+            String name = object.optString("name");
+            if (TextUtils.isEmpty(name)) name = object.optString("tag_name");
+            final String version = name;
+            String desc = object.optString("body");
+            apkUrl = findApkUrl(object.optJSONArray("assets"), getApkName());
+            if (TextUtils.isEmpty(apkUrl)) return;
+            App.post(() -> show(activity, version, desc));
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private int parseCode(String tag) {
+        if (TextUtils.isEmpty(tag)) return 0;
+        try {
+            return Integer.parseInt(tag.trim());
+        } catch (NumberFormatException e) {
+            // 兼容 "v564" / "5.6.4" 等写法：剔除非数字字符后取整。
+            String digits = tag.replaceAll("[^0-9]", "");
+            if (TextUtils.isEmpty(digits)) return 0;
+            try {
+                return Integer.parseInt(digits);
+            } catch (NumberFormatException ignored) {
+                return 0;
+            }
+        }
+    }
+
+    private String findApkUrl(JSONArray assets, String apkName) {
+        if (assets == null) return null;
+        for (int i = 0; i < assets.length(); i++) {
+            JSONObject asset = assets.optJSONObject(i);
+            if (asset == null) continue;
+            if (apkName.equals(asset.optString("name"))) {
+                return asset.optString("browser_download_url");
+            }
+        }
+        return null;
     }
 
     private void show(FragmentActivity activity, String version, String desc) {
@@ -77,13 +108,18 @@ public class Updater implements Download.Callback, UpdateListener {
     @Override
     public void onConfirm(View view) {
         view.setEnabled(false);
+        if (TextUtils.isEmpty(apkUrl)) {
+            error("未找到匹配的安装包");
+            return;
+        }
+        download = Download.create(apkUrl, getFile());
         download.start(this);
     }
 
     @Override
     public void onCancel(View view) {
         Setting.putUpdate(false);
-        download.cancel();
+        if (download != null) download.cancel();
         dismiss();
     }
 
