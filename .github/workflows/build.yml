@@ -18,7 +18,10 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-37"
 
       - name: Create local.properties
         run: |
@@ -31,7 +34,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run assembleMobileDebug
-        run: ./gradlew assembleMobileDebug
+        run: ./gradlew assembleMobileDebug --stacktrace
 
       - name: Upload debug apk
         uses: actions/upload-artifact@v4
