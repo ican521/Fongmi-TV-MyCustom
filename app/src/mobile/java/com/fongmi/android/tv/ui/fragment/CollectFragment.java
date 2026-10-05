@@ -157,8 +157,14 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
 
     @Override
     public void onItemClick(Vod item) {
-        if (item.isFolder()) FolderActivity.start(requireActivity(), item.getSiteKey(), Result.folder(item));
-        else VideoActivity.collect(requireActivity(), item.getSiteKey(), item.getId(), item.getName(), item.getPic());
+        if (item.isFolder()) {
+            FolderActivity.start(requireActivity(), item.getSiteKey(), Result.folder(item));
+        } else {
+            VideoActivity.collect(requireActivity(), item.getSiteKey(), item.getId(), item.getName(), item.getPic());
+            // 搜索结果进入视频后，将搜索页从返回栈移除，使视频页直接叠在主页之上，
+            // 这样从视频页返回一次即可回到主页，不必先退回搜索页。
+            requireActivity().finish();
+        }
     }
 
     @Override
