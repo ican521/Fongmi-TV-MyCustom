@@ -46,6 +46,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -154,7 +155,6 @@ class CapsuleBottomBar @JvmOverloads constructor(
     @Composable
     private fun Bar() {
         val accent = themeColor("colorPrimary", 0xFF6750A4.toInt())
-        val containerColor = Color(0xFF242424)
         val onSurface = themeColor("colorOnSurface", 0xFFE6E6E6.toInt())
         val density = LocalDensity.current
         val scope = rememberCoroutineScope()
@@ -232,11 +232,18 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     .width(280.dp)
                     .fillMaxHeight(),
             ) {
+            // 毛玻璃背景层：实时模糊背后内容 + 半透明深色蒙版，裁成胶囊形。
+            // 作为最底层绘制，图标文字与指示器在其之上。
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(pill),
+                factory = { ctx -> BlurBackdrop(ctx) },
+            )
             Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .onSizeChanged { totalWidthPx = it.width.toFloat() }
-                    .background(containerColor, pill)
                     .border(1.dp, strokeColor, pill)
                     .pointerInput(count) {
                         if (count <= 1) return@pointerInput
