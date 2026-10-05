@@ -170,6 +170,8 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val position = remember { Animatable(sel.toFloat(), 0.001f) }
         val stretch = remember { Animatable(1f, 0.001f) }
         var dragNonce by remember { mutableIntStateOf(0) }
+        // 拖动目标累加器：独立于滞后的动画值 position.value，保证目标随手指正确累加，能拖到任意 tab。
+        var dragTarget by remember { mutableFloatStateOf(sel.toFloat()) }
 
         // 照搬参考：拖动时整个胶囊做橡皮筋式整体微移（panelOffset），松手弹回 0。
         val offsetAnimation = remember { Animatable(0f) }
@@ -222,8 +224,9 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     .pointerInput(count) {
                         if (count <= 1) return@pointerInput
                         detectDragGestures(
+                            onDragStart = { dragTarget = position.value },
                             onDragEnd = {
-                                val idx = position.targetValue.roundToInt().coerceIn(0, count - 1)
+                                val idx = dragTarget.roundToInt().coerceIn(0, count - 1)
                                 val real = visible.getOrNull(idx)?.let { tabs.indexOf(it) } ?: sel
                                 if (real != selected.intValue) {
                                     selected.intValue = real
@@ -248,16 +251,17 @@ class CapsuleBottomBar @JvmOverloads constructor(
                             },
                         ) { change, dragAmount ->
                             change.consume()
+                            // 用独立累加器 dragTarget 累加位移（而非滞后的 position.value），
+                            // 保证目标随手指正确累加、能拖到任意 tab；position 用弹簧追逐 dragTarget。
                             val next =
-                                (position.value + dragAmount.x / tabWidthPx)
+                                (dragTarget + dragAmount.x / tabWidthPx)
                                     .coerceIn(0f, (count - 1).toFloat())
-                            // 弹簧追逐手指：不 1:1 跟手，带轻微滞后/阻尼地追过去。
-                            // UNDISPATCHED 保证同帧立即启动、目标随拖动持续累加，能拖到任意 tab。
-                            // stiffness 取 450（小于参考 1000），滞后更明显、手感更慵懒。
+                            dragTarget = next
+                            // 弹簧追逐手指：刚度取参考的 1000，追得快、延迟很轻。
                             scope.launch(start = CoroutineStart.UNDISPATCHED) {
                                 position.animateTo(
                                     next,
-                                    spring(dampingRatio = 1f, stiffness = 450f, visibilityThreshold = 0.001f),
+                                    spring(dampingRatio = 1f, stiffness = 1000f, visibilityThreshold = 0.001f),
                                 )
                             }
                             // 橡皮筋：整个胶囊微移。
