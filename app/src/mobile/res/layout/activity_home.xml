@@ -21,12 +21,12 @@
 
     <com.fongmi.android.tv.ui.custom.CapsuleBottomBar
         android:id="@+id/navigation"
-        android:layout_width="300dp"
-        android:layout_height="72dp"
+        android:layout_width="280dp"
+        android:layout_height="64dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="14dp" />
 
 </RelativeLayout>

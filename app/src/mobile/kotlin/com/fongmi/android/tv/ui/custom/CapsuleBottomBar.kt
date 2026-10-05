@@ -35,7 +35,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -165,18 +164,14 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val pill = CircleShape
         val indicatorColor = accent.copy(alpha = 0.15f)
 
-        // 外层留白，给阴影留出绘制空间
+        // 胶囊本体（含 tab）
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxSize(),
         ) {
-            // 胶囊本体（含 tab）
             Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .onSizeChanged { totalWidthPx = it.width.toFloat() }
-                    .shadow(elevation = 10.dp, shape = pill, clip = false)
                     .background(containerColor, pill)
                     .pointerInput(count) {
                         if (count <= 1) return@pointerInput

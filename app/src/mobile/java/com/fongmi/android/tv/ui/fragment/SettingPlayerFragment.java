@@ -15,7 +15,7 @@ import com.fongmi.android.tv.impl.UaListener;
 import com.fongmi.android.tv.player.mpv.MpvUtil;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
-import com.fongmi.android.tv.ui.activity.HomeActivity;
+import com.fongmi.android.tv.ui.activity.SettingActivity;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.BufferDialog;
 import com.fongmi.android.tv.ui.dialog.MpvConfDialog;
@@ -152,11 +152,11 @@ public class SettingPlayerFragment extends BaseFragment implements UaListener, B
     }
 
     private void onPreload(View view) {
-        ((HomeActivity) requireActivity()).change(4);
+        SettingActivity.start(requireActivity(), SettingActivity.PRELOAD);
     }
 
     private void onDecode(View view) {
-        ((HomeActivity) requireActivity()).change(5);
+        SettingActivity.start(requireActivity(), SettingActivity.DECODE);
     }
 
     private void onUa(View view) {

@@ -24,7 +24,7 @@ import com.fongmi.android.tv.impl.ConfigListener;
 import com.fongmi.android.tv.impl.SiteListener;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
-import com.fongmi.android.tv.ui.activity.HomeActivity;
+import com.fongmi.android.tv.ui.activity.SettingActivity;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.ConfigDialog;
 import com.fongmi.android.tv.ui.dialog.HistoryDialog;
@@ -62,10 +62,6 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         List<String> list = new ArrayList<>();
         for (Doh item : VodConfig.get().getDoh()) list.add(item.getName());
         return list.toArray(new String[0]);
-    }
-
-    private HomeActivity getRoot() {
-        return (HomeActivity) requireActivity();
     }
 
     @Override
@@ -193,7 +189,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     }
 
     private void onPlayer(View view) {
-        getRoot().change(3);
+        SettingActivity.start(requireActivity(), SettingActivity.PLAYER);
     }
 
     private void onVersion(View view) {
