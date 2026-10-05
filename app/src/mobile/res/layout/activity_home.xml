@@ -11,15 +11,17 @@
         android:layout_height="match_parent"
         android:layout_above="@+id/navigation" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+    <com.fongmi.android.tv.ui.custom.CapsuleBottomBar
         android:id="@+id/navigation"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_width="280dp"
+        android:layout_height="52dp"
         android:layout_alignParentBottom="true"
-        android:background="@color/transparent"
-        app:elevation="0dp"
-        app:itemIconTint="@color/selector_nav"
-        app:labelVisibilityMode="unlabeled"
-        app:menu="@menu/menu_nav" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="14dp"
+        android:background="@drawable/bg_capsule_bar"
+        android:elevation="6dp"
+        android:padding="4dp" />
 
 </RelativeLayout>

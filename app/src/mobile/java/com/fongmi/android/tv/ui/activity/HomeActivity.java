@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.MenuItem;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -33,6 +32,7 @@ import com.fongmi.android.tv.receiver.ShortcutReceiver;
 import com.fongmi.android.tv.server.Server;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.ui.base.BaseActivity;
+import com.fongmi.android.tv.ui.custom.CapsuleBottomBar;
 import com.fongmi.android.tv.ui.custom.FragmentStateManager;
 import com.fongmi.android.tv.ui.fragment.KeepFragment;
 import com.fongmi.android.tv.ui.fragment.SettingFragment;
@@ -46,12 +46,11 @@ import com.fongmi.android.tv.utils.PermissionUtil;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.fongmi.android.tv.utils.Util;
 import com.github.catvod.net.OkHttp;
-import com.google.android.material.navigation.NavigationBarView;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-public class HomeActivity extends BaseActivity implements NavigationBarView.OnItemSelectedListener {
+public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTabSelectedListener {
 
     private FragmentStateManager mManager;
     private ActivityHomeBinding mBinding;
@@ -77,7 +76,7 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     @Override
     protected void initView(Bundle savedInstanceState) {
         orientation = getResources().getConfiguration().orientation;
-        mBinding.navigation.setOnItemSelectedListener(this);
+        mBinding.navigation.setOnTabSelectedListener(this);
         PermissionUtil.requestNotify(this);
         initFragment(savedInstanceState);
         Updater.create().start(this);
@@ -138,14 +137,18 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     }
 
     private void setNavigation() {
-        mBinding.navigation.getMenu().findItem(R.id.vod).setVisible(true);
-        mBinding.navigation.getMenu().findItem(R.id.keep).setVisible(true);
-        mBinding.navigation.getMenu().findItem(R.id.setting).setVisible(true);
+        mBinding.navigation.setTabVisible(R.id.vod, true);
+        mBinding.navigation.setTabVisible(R.id.keep, true);
+        mBinding.navigation.setTabVisible(R.id.setting, true);
     }
 
     public void change(int position) {
-        if (position < 3) mBinding.navigation.setSelectedItemId(position == 0 ? R.id.vod : position == 1 ? R.id.keep : R.id.setting);
-        else mManager.change(position);
+        if (position < 3) {
+            mManager.change(position);
+            mBinding.navigation.setSelected(position, true);
+        } else {
+            mManager.change(position);
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -172,11 +175,8 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     }
 
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.setting) return mManager.change(2);
-        if (item.getItemId() == R.id.keep) return mManager.change(1);
-        if (item.getItemId() == R.id.vod) return mManager.change(0);
-        return false;
+    public void onTabSelected(int index) {
+        mManager.change(index);
     }
 
     @Override
@@ -194,7 +194,7 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
 
     @Override
     protected void onBackInvoked() {
-        if (!mBinding.navigation.getMenu().findItem(R.id.vod).isVisible()) {
+        if (!mBinding.navigation.isTabVisible(R.id.vod)) {
             setNavigation();
         } else if (mManager.isVisible(5) || mManager.isVisible(4) || mManager.isVisible(3)) {
             change(2);
