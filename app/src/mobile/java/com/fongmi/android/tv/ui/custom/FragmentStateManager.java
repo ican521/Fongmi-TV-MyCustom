@@ -53,4 +53,13 @@ public class FragmentStateManager {
         BaseFragment fragment = getFragment(position);
         return fragment != null && fragment.canBack();
     }
+
+    /** 移除当前容器里的所有 fragment（用于关闭覆盖层子页面）。 */
+    public void clear() {
+        FragmentTransaction ft = fm.beginTransaction();
+        for (Fragment fragment : fm.getFragments()) {
+            if (fragment.getId() == container.getId()) ft.remove(fragment);
+        }
+        ft.commitNowAllowingStateLoss();
+    }
 }

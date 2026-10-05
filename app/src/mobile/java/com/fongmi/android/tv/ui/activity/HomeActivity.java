@@ -13,7 +13,12 @@ import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
 import androidx.core.splashscreen.SplashScreen;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Lifecycle;
 import androidx.viewbinding.ViewBinding;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.R;
@@ -32,6 +37,7 @@ import com.fongmi.android.tv.receiver.ShortcutReceiver;
 import com.fongmi.android.tv.server.Server;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.ui.base.BaseActivity;
+import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.custom.CapsuleBottomBar;
 import com.fongmi.android.tv.ui.custom.FragmentStateManager;
 import com.fongmi.android.tv.ui.fragment.KeepFragment;
@@ -54,6 +60,7 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
 
     private FragmentStateManager mManager;
     private ActivityHomeBinding mBinding;
+    private ViewPager2 mPager;
     private int orientation;
 
     @Override
@@ -103,16 +110,23 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
     }
 
     private void initFragment(Bundle savedInstanceState) {
-        mManager = new FragmentStateManager(mBinding.container, getSupportFragmentManager(), position -> switch (position) {
-            case 0 -> VodFragment.newInstance();
-            case 1 -> KeepFragment.newInstance();
-            case 2 -> SettingFragment.newInstance();
+        mPager = mBinding.container;
+        mPager.setAdapter(new HomePagerAdapter(getSupportFragmentManager(), getLifecycle()));
+        mPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                mBinding.navigation.setSelected(position, true);
+            }
+        });
+        // 设置子页面（3/4/5）走覆盖层 overlay，与 ViewPager2 的主页面互不干扰
+        mManager = new FragmentStateManager(mBinding.overlay, getSupportFragmentManager(), position -> switch (position) {
             case 3 -> SettingPlayerFragment.newInstance();
             case 4 -> SettingPreloadFragment.newInstance();
             case 5 -> SettingDecodeFragment.newInstance();
             default -> null;
         });
-        if (savedInstanceState == null) change(0);
+        mPager.setCurrentItem(0, false);
+        mBinding.navigation.setSelected(0, false);
     }
 
     private void initConfig() {
@@ -144,7 +158,8 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
 
     public void change(int position) {
         if (position < 3) {
-            mManager.change(position);
+            mManager.clear();
+            mPager.setCurrentItem(position, true);
             mBinding.navigation.setSelected(position, true);
         } else {
             mManager.change(position);
@@ -176,7 +191,7 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
 
     @Override
     public void onTabSelected(int index) {
-        mManager.change(index);
+        change(index);
     }
 
     @Override
@@ -198,14 +213,24 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
             setNavigation();
         } else if (mManager.isVisible(5) || mManager.isVisible(4) || mManager.isVisible(3)) {
             change(2);
-        } else if (mManager.isVisible(2)) {
+        } else if (mPager.getCurrentItem() == 2) {
             change(0);
-        } else if (mManager.isVisible(1)) {
-            if (mManager.canBack(1)) change(0);
-        } else if (mManager.canBack(0)) {
+        } else if (mPager.getCurrentItem() == 1) {
+            if (canBackCurrent()) change(0);
+        } else if (canBackCurrent()) {
             if (PlaybackService.isRunning()) Util.moveToBackground(this);
             else super.onBackInvoked();
         }
+    }
+
+    private boolean canBackCurrent() {
+        BaseFragment fragment = currentFragment();
+        return fragment != null && fragment.canBack();
+    }
+
+    private BaseFragment currentFragment() {
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("f" + mPager.getCurrentItem());
+        return fragment instanceof BaseFragment ? (BaseFragment) fragment : null;
     }
 
     @Override
@@ -216,5 +241,28 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
         Source.get().exit();
         Server.get().stop();
         super.onDestroy();
+    }
+
+    /** 底部三个主页面的 ViewPager2 适配器，切换时自带左右平移动画。 */
+    private static class HomePagerAdapter extends FragmentStateAdapter {
+
+        HomePagerAdapter(FragmentManager fragmentManager, Lifecycle lifecycle) {
+            super(fragmentManager, lifecycle);
+        }
+
+        @NonNull
+        @Override
+        public Fragment createFragment(int position) {
+            return switch (position) {
+                case 0 -> VodFragment.newInstance();
+                case 1 -> KeepFragment.newInstance();
+                default -> SettingFragment.newInstance();
+            };
+        }
+
+        @Override
+        public int getItemCount() {
+            return 3;
+        }
     }
 }

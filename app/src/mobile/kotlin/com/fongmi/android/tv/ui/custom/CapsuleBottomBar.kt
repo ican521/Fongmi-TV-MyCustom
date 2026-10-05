@@ -1,16 +1,20 @@
 package com.fongmi.android.tv.ui.custom
 
 import android.content.Context
+import android.graphics.Outline
 import android.util.AttributeSet
+import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.annotation.IdRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -82,6 +86,14 @@ class CapsuleBottomBar @JvmOverloads constructor(
     private var listener: OnTabSelectedListener? = null
 
     init {
+        // 让 elevation 阴影按胶囊圆角绘制，而不是矩形轮廓
+        clipToOutline = false
+        outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: android.view.View, outline: Outline) {
+                val radius = view.height / 2f
+                outline.setRoundRect(0, 0, view.width, view.height, radius)
+            }
+        }
         val composeView = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -138,14 +150,17 @@ class CapsuleBottomBar @JvmOverloads constructor(
 
         val position = remember { Animatable(sel.toFloat(), 0.001f) }
         val stretch = remember { Animatable(1f, 0.001f) }
+        var dragNonce by remember { mutableIntStateOf(0) }
 
-        LaunchedEffect(sel, count) {
+        // 选中/拖动结束都驱动指示器弹簧归位
+        LaunchedEffect(sel, count, dragNonce) {
             position.animateTo(sel.toFloat(), spring(dampingRatio = 1f, stiffness = 1000f))
         }
+        // 按速度拉伸，让「弹一下」更明显
         LaunchedEffect(Unit) {
             snapshotFlow { position.velocity }.collect { v ->
-                val target = (1f + (abs(v) / count) * 0.12f).coerceIn(1f, 1.18f)
-                stretch.animateTo(target, spring(dampingRatio = 0.6f, stiffness = 250f))
+                val target = (1f + (abs(v) / count) * 0.3f).coerceIn(1f, 1.4f)
+                stretch.animateTo(target, spring(dampingRatio = 0.5f, stiffness = 220f))
             }
         }
 
@@ -164,13 +179,15 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     if (count <= 1) return@pointerInput
                     detectDragGestures(
                         onDragEnd = {
-                            scope.launch {
-                                val idx = position.value.roundToInt().coerceIn(0, count - 1)
-                                val real = visible.getOrNull(idx)?.let { tabs.indexOf(it) } ?: sel
-                                selectTab(real, true)
+                            val idx = position.value.roundToInt().coerceIn(0, count - 1)
+                            val real = visible.getOrNull(idx)?.let { tabs.indexOf(it) } ?: sel
+                            if (real != selected.intValue) {
+                                selected.intValue = real
+                                listener?.onTabSelected(real)
                             }
+                            dragNonce++
                         },
-                        onDragCancel = {},
+                        onDragCancel = { dragNonce++ },
                     ) { change, dragAmount ->
                         change.consume()
                         scope.launch {
@@ -182,13 +199,12 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     }
                 },
         ) {
-            // 指示器
+            // 指示器：与 tab 等宽对齐，避免末项被裁切
             if (widthPx > 0f) {
                 val indicatorDp = with(density) { tabWidth.toDp() }
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .padding(4.dp)
                         .width(indicatorDp)
                         .offset { IntOffset((position.value * tabWidth).roundToInt(), 0) }
                         .fillMaxHeight()
@@ -205,23 +221,26 @@ class CapsuleBottomBar @JvmOverloads constructor(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .clickable { selectTab(tabs.indexOf(tab), true) },
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) { selectTab(tabs.indexOf(tab), true) },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
                         ) {
                             Icon(
                                 painter = painterResource(tab.icon),
                                 contentDescription = null,
                                 tint = if (isSel) accent else onColor,
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(23.dp),
                             )
                             Text(
                                 text = stringResource(tab.label),
                                 color = if (isSel) accent else onColor,
-                                fontSize = 12.sp,
+                                fontSize = 10.sp,
                             )
                         }
                     }
