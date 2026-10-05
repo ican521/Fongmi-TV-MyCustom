@@ -59,8 +59,8 @@ public class CustomKeyDown extends GestureDetector.SimpleOnGestureListener imple
         if (action == MotionEvent.ACTION_DOWN) multiTouch = false;
         if (action == MotionEvent.ACTION_POINTER_DOWN) multiTouch = true;
         if (action == MotionEvent.ACTION_UP) listener.onTouchEnd();
-        if (changeSpeed && action == MotionEvent.ACTION_UP) listener.onSpeedEnd();
-        if (changeTime && action == MotionEvent.ACTION_UP) listener.onSeekEnd(time);
+        if (!lock && changeSpeed && action == MotionEvent.ACTION_UP) listener.onSpeedEnd();
+        if (!lock && changeTime && action == MotionEvent.ACTION_UP) listener.onSeekEnd(time);
         return e.getPointerCount() == 2 ? scaleDetector.onTouchEvent(e) : detector.onTouchEvent(e);
     }
 
@@ -75,6 +75,13 @@ public class CustomKeyDown extends GestureDetector.SimpleOnGestureListener imple
 
     public void setLock(boolean lock) {
         this.lock = lock;
+        // 锁定/解锁时清空残留的手势状态，避免上次横向快进留下的 changeTime/time
+        // 在锁定后被后续点击的 ACTION_UP 误提交为快进。
+        changeTime = false;
+        changeSpeed = false;
+        changeBright = false;
+        changeVolume = false;
+        time = 0;
     }
 
     public float getScale() {
