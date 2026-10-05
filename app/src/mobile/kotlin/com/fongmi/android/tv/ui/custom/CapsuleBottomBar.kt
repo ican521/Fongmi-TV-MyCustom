@@ -10,6 +10,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -198,6 +199,8 @@ class CapsuleBottomBar @JvmOverloads constructor(
 
         val pill = CircleShape
         val indicatorColor = accent.copy(alpha = 0.15f)
+        // 胶囊外层一圈亮色描边：底栏为深色，用白色 12% 透明度做细微亮边（参考项目的高光思路）。
+        val strokeColor = Color.White.copy(alpha = 0.12f)
 
         // 胶囊本体（含 tab + 指示器）。panelOffset 加在最外层，拖动时整个胶囊
         // （背景 + 图标文字 + 指示器）作为一个刚体做橡皮筋微移，图标文字不会单独滑动。
@@ -221,6 +224,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     .fillMaxSize()
                     .onSizeChanged { totalWidthPx = it.width.toFloat() }
                     .background(containerColor, pill)
+                    .border(1.dp, strokeColor, pill)
                     .pointerInput(count) {
                         if (count <= 1) return@pointerInput
                         detectDragGestures(

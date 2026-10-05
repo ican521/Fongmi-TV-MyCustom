@@ -38,7 +38,8 @@ import pl.droidsonroids.gif.GifDrawable;
 
 public class CustomWallView extends FrameLayout implements DefaultLifecycleObserver {
 
-    private static final int[] WALL_PAPERS = {0, R.drawable.wallpaper_1, R.drawable.wallpaper_2, R.drawable.wallpaper_3, R.drawable.wallpaper_4};
+    // 已移除 APP 自带壁纸，背景统一使用与底栏一致的纯色（colorSurface）。
+    private static final int[] WALL_PAPERS = {0};
     private static final int[] WALL_COLORS = {0, 0xFF40C090, 0xFF4870E0, 0xFF48B0C0, 0xFF404040};
     private static final int TYPE_RES = 0;
     private static final int TYPE_GIF = 1;
@@ -89,12 +90,21 @@ public class CustomWallView extends FrameLayout implements DefaultLifecycleObser
     }
 
     private void load() {
-        int wall = Setting.getWall();
-        int type = Setting.getWallType();
-        if (isBuiltIn(wall, type)) loadRes(WALL_PAPERS[wall]);
-        else if (type == TYPE_VIDEO) loadVideo(Path.wall(wall));
-        else if (type == TYPE_GIF) loadGif(Path.wall(wall));
-        else loadImage();
+        // 背景统一为与底栏一致的纯色（colorSurface），不再加载任何壁纸图片/视频/GIF。
+        if (binding != null && binding.image != null) binding.image.setVisibility(GONE);
+        setBackgroundColor(surfaceColor());
+    }
+
+    private int surfaceColor() {
+        int id = getContext().getResources().getIdentifier("colorSurface", "attr", "android");
+        if (id == 0) id = getContext().getResources().getIdentifier("colorSurface", "attr", getContext().getPackageName());
+        if (id == 0) return 0xFF1B1B1F;
+        android.content.res.TypedArray ta = getContext().obtainStyledAttributes(new int[]{id});
+        try {
+            return ta.getColor(0, 0xFF1B1B1F);
+        } finally {
+            ta.recycle();
+        }
     }
 
     private void theme() {
@@ -112,7 +122,7 @@ public class CustomWallView extends FrameLayout implements DefaultLifecycleObser
     private void loadImage() {
         Drawable cache = cache();
         if (cache != null) binding.image.setImageDrawable(cache);
-        else binding.image.setImageResource(R.drawable.wallpaper_1);
+        else binding.image.setImageDrawable(null);
     }
 
     private void loadVideo(File file) {
