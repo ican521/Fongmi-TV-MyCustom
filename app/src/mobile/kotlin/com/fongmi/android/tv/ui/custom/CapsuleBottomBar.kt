@@ -240,8 +240,9 @@ class CapsuleBottomBar @JvmOverloads constructor(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 visible.forEach { tab ->
-                    val isSel = tabs.indexOf(tab) == sel
-                    val tint = if (isSel) accent else onSurface
+                    // 照搬参考：基础 tab 的图标/文字始终为 onSurface，不随选中变色；
+                    // 选中态仅由上方覆盖的指示器（accent@15%）体现。
+                    val tint = onSurface
                     Box(
                         modifier = Modifier
                             .weight(1f)
