@@ -18,10 +18,12 @@ import androidx.media3.common.TrackSelectionOverride;
 import androidx.media3.common.Tracks;
 import androidx.media3.common.VideoSize;
 import androidx.media3.ui.PlayerView;
+import androidx.media3.ui.danmaku.DanmakuConfig;
 
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.Constant;
 import com.fongmi.android.tv.R;
+import com.fongmi.android.tv.bean.Danmaku;
 import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.bean.Sub;
 import com.fongmi.android.tv.bean.Track;
@@ -42,6 +44,7 @@ import com.fongmi.android.tv.utils.ResUtil;
 import com.fongmi.android.tv.utils.Util;
 import com.google.common.net.HttpHeaders;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +74,19 @@ public class PlayerManager implements ParseCallback {
         this.engine = PlayerEngineFactory.create(decode, listener);
         this.effects = new PlayerEffectManager(() -> engine);
         this.player = engine.getPlayer();
+    }
+
+    public List<Danmaku> getDanmakus() {
+        return new ArrayList<>();
+    }
+
+    public void setDanmaku(Danmaku item) {
+    }
+
+    public void toggleDanmaku(Danmaku item) {
+    }
+
+    public void setDanmakuConfig(DanmakuConfig config) {
     }
 
     public void release() {

@@ -1,0 +1,173 @@
+﻿> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy UP-TO-DATE
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preMobileDebugBuild UP-TO-DATE
+> Task :app:mergeMobileDebugNativeDebugMetadata NO-SOURCE
+> Task :app:dataBindingMergeDependencyArtifactsMobileDebug UP-TO-DATE
+> Task :app:generateMobileDebugResources
+> Task :catvod:preBuild UP-TO-DATE
+> Task :catvod:preDebugBuild UP-TO-DATE
+> Task :catvod:generateDebugResources UP-TO-DATE
+> Task :catvod:packageDebugResources UP-TO-DATE
+> Task :chaquo:preBuild UP-TO-DATE
+> Task :chaquo:preDebugBuild UP-TO-DATE
+> Task :chaquo:generateDebugResources UP-TO-DATE
+> Task :chaquo:packageDebugResources UP-TO-DATE
+> Task :quickjs:preBuild UP-TO-DATE
+> Task :quickjs:preDebugBuild UP-TO-DATE
+> Task :quickjs:generateDebugResources UP-TO-DATE
+> Task :quickjs:packageDebugResources UP-TO-DATE
+> Task :app:packageMobileDebugResources
+> Task :catvod:processDebugNavigationResources UP-TO-DATE
+> Task :chaquo:processDebugNavigationResources UP-TO-DATE
+> Task :quickjs:processDebugNavigationResources UP-TO-DATE
+> Task :app:processMobileDebugNavigationResources
+> Task :catvod:parseDebugLocalResources UP-TO-DATE
+> Task :catvod:generateDebugRFile UP-TO-DATE
+> Task :chaquo:parseDebugLocalResources UP-TO-DATE
+> Task :chaquo:generateDebugRFile UP-TO-DATE
+> Task :quickjs:parseDebugLocalResources UP-TO-DATE
+> Task :quickjs:generateDebugRFile UP-TO-DATE
+> Task :app:generateMobileDebugBuildConfig UP-TO-DATE
+> Task :catvod:compileDebugKotlin NO-SOURCE
+> Task :catvod:javaPreCompileDebug UP-TO-DATE
+> Task :catvod:compileDebugJavaWithJavac UP-TO-DATE
+> Task :catvod:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :chaquo:extractDebugPythonBuildPackages UP-TO-DATE
+> Task :chaquo:installDebugPythonRequirements UP-TO-DATE
+> Task :chaquo:mergeDebugPythonSources UP-TO-DATE
+> Task :chaquo:generateDebugPythonProxies UP-TO-DATE
+> Task :chaquo:compileDebugKotlin NO-SOURCE
+> Task :chaquo:javaPreCompileDebug UP-TO-DATE
+> Task :chaquo:compileDebugJavaWithJavac UP-TO-DATE
+> Task :chaquo:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :quickjs:compileDebugKotlin NO-SOURCE
+> Task :quickjs:javaPreCompileDebug UP-TO-DATE
+> Task :quickjs:compileDebugJavaWithJavac UP-TO-DATE
+> Task :quickjs:bundleLibCompileToJarDebug UP-TO-DATE
+
+> Task :app:mergeMobileDebugResources
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\mobile\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\mobile\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Multiple substitutions specified in non-positional format of string resource string/detail_title. Did you mean to add the formatted="false" attribute?
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\mobile\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+D:\Fongmi-TV-MyCustom\app\src\main\res\values\strings.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+C:\Users\15791\.gradle\caches\9.7.1\transforms\5dbe04ba2d83e6bdfa0491820efa5381\transformed\preference-1.2.1\res\values\values.xml: Ignoring element '{http://schemas.android.com/apk/res-auto}g' with unknown namespace 'http://schemas.android.com/apk/res-auto'.
+
+> Task :app:javaPreCompileMobileDebug UP-TO-DATE
+> Task :app:generateMobileDebugAssets UP-TO-DATE
+> Task :catvod:generateDebugAssets UP-TO-DATE
+> Task :catvod:mergeDebugAssets UP-TO-DATE
+> Task :chaquo:generateDebugAssets UP-TO-DATE
+> Task :chaquo:generateDebugPythonMiscAssets UP-TO-DATE
+> Task :chaquo:generateDebugPythonRequirementsAssets UP-TO-DATE
+> Task :chaquo:generateDebugPythonSourceAssets UP-TO-DATE
+> Task :chaquo:generateDebugPythonBuildAssets UP-TO-DATE
+> Task :chaquo:mergeDebugAssets UP-TO-DATE
+> Task :quickjs:generateDebugAssets UP-TO-DATE
+> Task :quickjs:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeMobileDebugAssets UP-TO-DATE
+> Task :app:compressMobileDebugAssets UP-TO-DATE
+> Task :app:generateMobileDebugGlobalSynthetics UP-TO-DATE
+> Task :app:l8DexDesugarLibMobileDebug UP-TO-DATE
+> Task :app:checkMobileDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarMobileDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexMobileDebug UP-TO-DATE
+> Task :chaquo:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :quickjs:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :catvod:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :app:mergeLibDexMobileDebug UP-TO-DATE
+> Task :catvod:processDebugJavaRes NO-SOURCE
+> Task :chaquo:processDebugJavaRes NO-SOURCE
+> Task :quickjs:processDebugJavaRes NO-SOURCE
+> Task :catvod:writeDebugAarMetadata UP-TO-DATE
+> Task :chaquo:writeDebugAarMetadata UP-TO-DATE
+> Task :quickjs:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkMobileDebugAarMetadata UP-TO-DATE
+> Task :app:mapMobileDebugSourceSetPaths
+> Task :app:compileMobileDebugNavigationResources UP-TO-DATE
+> Task :app:createMobileDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksMobileDebug UP-TO-DATE
+> Task :catvod:extractDeepLinksDebug UP-TO-DATE
+> Task :catvod:processDebugManifest UP-TO-DATE
+> Task :app:parseMobileDebugLocalResources
+> Task :chaquo:extractDeepLinksDebug UP-TO-DATE
+> Task :chaquo:processDebugManifest UP-TO-DATE
+> Task :quickjs:extractDeepLinksDebug UP-TO-DATE
+> Task :quickjs:processDebugManifest UP-TO-DATE
+> Task :app:processMobileDebugMainManifest UP-TO-DATE
+> Task :app:processMobileDebugManifest UP-TO-DATE
+> Task :app:processMobileDebugManifestForPackage UP-TO-DATE
+> Task :catvod:mapDebugSourceSetPaths UP-TO-DATE
+> Task :catvod:compileDebugLibraryResources UP-TO-DATE
+> Task :chaquo:mapDebugSourceSetPaths UP-TO-DATE
+> Task :chaquo:compileDebugLibraryResources UP-TO-DATE
+> Task :quickjs:mapDebugSourceSetPaths UP-TO-DATE
+> Task :quickjs:compileDebugLibraryResources UP-TO-DATE
+> Task :app:mergeMobileDebugJniLibFolders UP-TO-DATE
+> Task :catvod:mergeDebugJniLibFolders UP-TO-DATE
+> Task :catvod:mergeDebugNativeLibs NO-SOURCE
+> Task :catvod:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :chaquo:generateDebugPythonJniLibs UP-TO-DATE
+> Task :chaquo:mergeDebugJniLibFolders UP-TO-DATE
+> Task :chaquo:mergeDebugNativeLibs UP-TO-DATE
+> Task :chaquo:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :quickjs:mergeDebugJniLibFolders UP-TO-DATE
+> Task :quickjs:mergeDebugNativeLibs NO-SOURCE
+> Task :quickjs:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeMobileDebugNativeLibs UP-TO-DATE
+> Task :app:stripMobileDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningMobileDebug UP-TO-DATE
+> Task :app:writeMobileDebugAppMetadata UP-TO-DATE
+> Task :app:writeMobileDebugSigningConfigVersions UP-TO-DATE
+> Task :app:generateMobileDebugRFile
+> Task :app:dataBindingGenBaseClassesMobileDebug
+> Task :app:compileMobileDebugKotlin NO-SOURCE
+
+> Task :app:compileMobileDebugJavaWithJavac
+.\gradlew.bat : 注: [1] Wrote GeneratedAppGlideModule with: [com.bumptech.glide.integration.okhttp3.OkHttpLibraryGlideMo
+dule, com.bumptech.glide.integration.avif.AvifGlideModule]
+At line:16 char:1
++ .\gradlew.bat :app:assembleMobileDebug --console=plain 2>&1 | Tee-Obj ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (注: [1] Wrote Ge...vifGlideModule]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+> Task :app:processMobileDebugJavaRes UP-TO-DATE
+> Task :app:mergeMobileDebugJavaResource UP-TO-DATE
+> Task :app:processMobileDebugResources
+> Task :app:dexBuilderMobileDebug
+> Task :app:mergeProjectDexMobileDebug
+> Task :app:packageMobileDebug
+> Task :app:createMobileDebugApkListingFileRedirect
+> Task :app:assembleMobileDebug
+
+[Incubating] Problems report is available at: file:///D:/Fongmi-TV-MyCustom/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 42s
+103 actionable tasks: 14 executed, 89 up-to-date

@@ -10,13 +10,6 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/keep"
-        android:icon="@drawable/ic_action_keep"
-        android:title="@string/app_keep"
-        app:iconTint="@color/white"
-        app:showAsAction="always" />
-
-    <item
         android:id="@+id/history"
         android:icon="@drawable/ic_action_history"
         android:title="@string/app_history"

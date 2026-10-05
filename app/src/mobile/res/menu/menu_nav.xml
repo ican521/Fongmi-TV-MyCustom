@@ -8,6 +8,12 @@
         android:visible="false" />
 
     <item
+        android:id="@+id/keep"
+        android:icon="@drawable/ic_nav_keep"
+        android:title="@string/app_keep"
+        android:visible="false" />
+
+    <item
         android:id="@+id/setting"
         android:icon="@drawable/ic_nav_setting"
         android:title="@string/nav_setting"
