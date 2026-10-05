@@ -192,7 +192,13 @@ class CapsuleBottomBar @JvmOverloads constructor(
                                 val next =
                                     (position.value + dragAmount.x / tabWidthPx)
                                         .coerceIn(0f, (count - 1).toFloat())
-                                position.snapTo(next)
+                                // 照搬参考项目 DampedDragAnimation.valueAnimationSpec：
+                                // 拖动时用 spring 追逐目标，而非 snapTo 瞬间贴合，
+                                // 让指示器带轻微延迟/阻尼地跟随手指，不再过于跟手。
+                                position.animateTo(
+                                    next,
+                                    spring(dampingRatio = 1f, stiffness = 1000f, visibilityThreshold = 0.001f),
+                                )
                             }
                         }
                     }
