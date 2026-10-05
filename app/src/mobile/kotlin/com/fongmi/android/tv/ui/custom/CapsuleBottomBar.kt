@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import com.fongmi.android.tv.R
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -215,7 +216,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
                         if (count <= 1) return@pointerInput
                         detectDragGestures(
                             onDragEnd = {
-                                val idx = position.value.roundToInt().coerceIn(0, count - 1)
+                                val idx = position.targetValue.roundToInt().coerceIn(0, count - 1)
                                 val real = visible.getOrNull(idx)?.let { tabs.indexOf(it) } ?: sel
                                 if (real != selected.intValue) {
                                     selected.intValue = real
@@ -243,9 +244,15 @@ class CapsuleBottomBar @JvmOverloads constructor(
                             val next =
                                 (position.value + dragAmount.x / tabWidthPx)
                                     .coerceIn(0f, (count - 1).toFloat())
-                            // 拖动时实时 snapTo 跟随手指，保证能自由滑到任意 tab；
-                            // 松手后由 onDragEnd 触发平滑吸附到最近 tab。
-                            scope.launch { position.snapTo(next) }
+                            // 弹簧追逐手指：不 1:1 跟手，带轻微滞后/阻尼地追过去。
+                            // UNDISPATCHED 保证同帧立即启动、目标随拖动持续累加，能拖到任意 tab。
+                            // stiffness 取 450（小于参考 1000），滞后更明显、手感更慵懒。
+                            scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                                position.animateTo(
+                                    next,
+                                    spring(dampingRatio = 1f, stiffness = 450f, visibilityThreshold = 0.001f),
+                                )
+                            }
                             // 橡皮筋：整个胶囊微移。
                             scope.launch {
                                 offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
