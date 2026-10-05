@@ -199,6 +199,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
 
         // 胶囊本体（含 tab + 指示器）。panelOffset 加在最外层，拖动时整个胶囊
         // （背景 + 图标文字 + 指示器）作为一个刚体做橡皮筋微移，图标文字不会单独滑动。
+        // 内层 280dp 居中放入 288dp 的 View，左右各留 4dp 余量，橡皮筋平移不会裁切圆角。
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -206,7 +207,13 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     alpha = barAlpha
                     translationX = panelOffset
                 },
+            contentAlignment = Alignment.Center,
         ) {
+            Box(
+                modifier = Modifier
+                    .width(280.dp)
+                    .fillMaxHeight(),
+            ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -313,6 +320,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
                         .clip(pill)
                         .background(indicatorColor, pill),
                 )
+            }
             }
         }
     }

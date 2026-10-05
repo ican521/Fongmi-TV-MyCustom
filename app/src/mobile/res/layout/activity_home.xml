@@ -3,6 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:fitsSystemWindows="false">
 
     <androidx.viewpager2.widget.ViewPager2
@@ -20,12 +22,14 @@
 
     <com.fongmi.android.tv.ui.custom.CapsuleBottomBar
         android:id="@+id/navigation"
-        android:layout_width="280dp"
+        android:layout_width="288dp"
         android:layout_height="64dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="14dp" />
+        android:layout_marginBottom="14dp"
+        android:clipChildren="false"
+        android:clipToPadding="false" />
 
 </RelativeLayout>
