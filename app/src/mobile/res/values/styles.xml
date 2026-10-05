@@ -1,8 +1,8 @@
 <resources>
 
     <style name="Theme.Base" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
-        <!-- 默认 APP 背景色：与底栏一致的 colorSurface，保证所有页面（含播放页）都有兜底底色。 -->
-        <item name="android:windowBackground">?attr/colorSurface</item>
+        <!-- 默认 APP 背景：纯黑，保证所有页面（含播放页）都有统一兜底底色。 -->
+        <item name="android:windowBackground">@color/black</item>
         <item name="android:statusBarColor">@color/transparent</item>
         <item name="android:navigationBarColor">@color/transparent</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>

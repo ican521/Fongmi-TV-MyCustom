@@ -90,21 +90,9 @@ public class CustomWallView extends FrameLayout implements DefaultLifecycleObser
     }
 
     private void load() {
-        // 背景统一为与底栏一致的纯色（colorSurface），不再加载任何壁纸图片/视频/GIF。
+        // 背景统一为纯黑，不再加载任何壁纸图片/视频/GIF。
         if (binding != null && binding.image != null) binding.image.setVisibility(GONE);
-        setBackgroundColor(surfaceColor());
-    }
-
-    private int surfaceColor() {
-        int id = getContext().getResources().getIdentifier("colorSurface", "attr", "android");
-        if (id == 0) id = getContext().getResources().getIdentifier("colorSurface", "attr", getContext().getPackageName());
-        if (id == 0) return 0xFF1B1B1F;
-        android.content.res.TypedArray ta = getContext().obtainStyledAttributes(new int[]{id});
-        try {
-            return ta.getColor(0, 0xFF1B1B1F);
-        } finally {
-            ta.recycle();
-        }
+        setBackgroundColor(0xFF000000);
     }
 
     private void theme() {
