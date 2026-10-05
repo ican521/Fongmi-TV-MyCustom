@@ -9,6 +9,8 @@ import android.text.TextUtils;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
@@ -111,6 +113,13 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
 
     private void initFragment(Bundle savedInstanceState) {
         mPager = mBinding.container;
+        // 根布局 fitsSystemWindows=false，不再给系统栏强制留白；这里仅把顶部状态栏 inset
+        // 作为内容区的上 padding，保证工具栏不被状态栏遮挡，列表仍可一直铺到屏幕最底端。
+        ViewCompat.setOnApplyWindowInsetsListener(mPager, (v, insets) -> {
+            int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            v.setPadding(v.getPaddingLeft(), top, v.getPaddingRight(), 0);
+            return insets;
+        });
         mPager.setUserInputEnabled(false);
         mPager.setAdapter(new HomePagerAdapter(getSupportFragmentManager(), getLifecycle()));
         mPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
