@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import androidx.annotation.IdRes
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -53,6 +55,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.math.sign
 
 /**
  * 悬浮胶囊底栏（Compose），视觉/尺寸/阴影/指示器照搬参考项目 KernelSU 的
@@ -151,6 +154,19 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val stretch = remember { Animatable(1f, 0.001f) }
         var dragNonce by remember { mutableIntStateOf(0) }
 
+        // 照搬参考：拖动时整个胶囊做橡皮筋式整体微移（panelOffset），松手弹回 0。
+        val offsetAnimation = remember { Animatable(0f) }
+        val rubberBandPx = with(density) { 4.dp.toPx() }
+        val panelOffset by remember(rubberBandPx, totalWidthPx) {
+            derivedStateOf {
+                if (totalWidthPx == 0f) 0f
+                else {
+                    val fraction = (offsetAnimation.value / totalWidthPx).coerceIn(-1f, 1f)
+                    rubberBandPx * sign(fraction) * EaseOut.transform(abs(fraction))
+                }
+            }
+        }
+
         LaunchedEffect(sel, count, dragNonce) {
             position.animateTo(sel.toFloat(), spring(dampingRatio = 1f, stiffness = 1000f))
         }
@@ -173,6 +189,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     .fillMaxSize()
                     .onSizeChanged { totalWidthPx = it.width.toFloat() }
                     .background(containerColor, pill)
+                    .graphicsLayer { translationX = panelOffset }
                     .pointerInput(count) {
                         if (count <= 1) return@pointerInput
                         detectDragGestures(
@@ -184,8 +201,22 @@ class CapsuleBottomBar @JvmOverloads constructor(
                                     listener?.onTabSelected(real)
                                 }
                                 dragNonce++
+                                scope.launch {
+                                    offsetAnimation.animateTo(
+                                        0f,
+                                        spring(dampingRatio = 1f, stiffness = 300f, visibilityThreshold = 0.5f),
+                                    )
+                                }
                             },
-                            onDragCancel = { dragNonce++ },
+                            onDragCancel = {
+                                dragNonce++
+                                scope.launch {
+                                    offsetAnimation.animateTo(
+                                        0f,
+                                        spring(dampingRatio = 1f, stiffness = 300f, visibilityThreshold = 0.5f),
+                                    )
+                                }
+                            },
                         ) { change, dragAmount ->
                             change.consume()
                             scope.launch {
@@ -199,6 +230,8 @@ class CapsuleBottomBar @JvmOverloads constructor(
                                     next,
                                     spring(dampingRatio = 1f, stiffness = 1000f, visibilityThreshold = 0.001f),
                                 )
+                                // 整个胶囊橡皮筋微移：随拖动累积，松手弹回。
+                                offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
                             }
                         }
                     }
@@ -247,7 +280,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
                         .align(Alignment.CenterStart)
                         .padding(horizontal = 4.dp)
                         .graphicsLayer {
-                            translationX = position.value * tabWidthPx
+                            translationX = position.value * tabWidthPx + panelOffset
                             scaleX = stretch.value
                         }
                         .width(tabWidthDp)
