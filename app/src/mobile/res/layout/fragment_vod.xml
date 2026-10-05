@@ -75,12 +75,13 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="88dp"
         android:visibility="gone"
-        app:backgroundTint="?attr/colorSecondaryContainer"
+        app:backgroundTint="@color/fab_bg"
+        app:rippleColor="@android:color/transparent"
         app:layout_anchor="@id/pager"
         app:layout_anchorGravity="end|bottom"
         app:layout_behavior="com.fongmi.android.tv.ui.custom.CustomFabBehavior"
         app:srcCompat="@drawable/ic_fab_filter"
-        app:tint="?attr/colorOnSecondaryContainer"
+        app:tint="?attr/colorOnSurface"
         tools:visibility="visible" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -90,12 +91,13 @@
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="88dp"
-        app:backgroundTint="?attr/colorSecondaryContainer"
+        app:backgroundTint="@color/fab_bg"
+        app:rippleColor="@android:color/transparent"
         app:layout_anchor="@id/pager"
         app:layout_anchorGravity="end|bottom"
         app:layout_behavior="com.fongmi.android.tv.ui.custom.CustomFabBehavior"
         app:srcCompat="@drawable/ic_fab_link"
-        app:tint="?attr/colorOnSecondaryContainer"
+        app:tint="?attr/colorOnSurface"
         tools:visibility="visible" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -107,12 +109,13 @@
         android:layout_marginBottom="88dp"
         android:tag="top"
         android:visibility="invisible"
-        app:backgroundTint="?attr/colorSecondaryContainer"
+        app:backgroundTint="@color/fab_bg"
+        app:rippleColor="@android:color/transparent"
         app:layout_anchor="@id/pager"
         app:layout_anchorGravity="end|bottom"
         app:layout_behavior="com.fongmi.android.tv.ui.custom.CustomFabBehavior"
         app:srcCompat="@drawable/ic_fab_top"
-        app:tint="?attr/colorOnSecondaryContainer"
+        app:tint="?attr/colorOnSurface"
         tools:visibility="visible" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
