@@ -6,7 +6,6 @@ import androidx.annotation.Nullable;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaMetadata;
 
-import com.fongmi.android.tv.bean.Danmaku;
 import com.fongmi.android.tv.bean.Drm;
 import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.bean.Sub;
@@ -15,7 +14,6 @@ import com.fongmi.android.tv.utils.UrlUtil;
 import com.google.common.net.HttpHeaders;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +21,6 @@ import java.util.Map;
 public class PlaySpec {
 
     private Map<String, String> headers;
-    private final List<Danmaku> danmakus;
     private MediaMetadata metadata;
     private List<Sub> subs;
     private String format;
@@ -31,34 +28,26 @@ public class PlaySpec {
     private String url;
     private Drm drm;
 
-    private PlaySpec(String key, String url, Map<String, String> headers, String format, Drm drm, List<Sub> subs, List<Danmaku> danmakus, MediaMetadata metadata) {
+    private PlaySpec(String key, String url, Map<String, String> headers, String format, Drm drm, List<Sub> subs, MediaMetadata metadata) {
         this.key = key;
         this.url = url;
         this.drm = drm;
         this.subs = subs;
         this.format = format;
         this.headers = headers;
-        this.danmakus = initDanmakus(danmakus);
         this.metadata = metadata;
     }
 
-    private static List<Danmaku> initDanmakus(List<Danmaku> items) {
-        List<Danmaku> danmakus = items == null ? new ArrayList<>() : new ArrayList<>(items);
-        danmakus.forEach(item -> item.setSelected(false));
-        if (!danmakus.isEmpty()) danmakus.get(0).setSelected(true);
-        return danmakus;
-    }
-
     public static PlaySpec from(String key, String url, Map<String, String> headers, MediaMetadata metadata) {
-        return new PlaySpec(key, url, headers, null, null, null, null, metadata);
+        return new PlaySpec(key, url, headers, null, null, null, metadata);
     }
 
     public static PlaySpec from(Result result, String key, MediaMetadata metadata) {
-        return new PlaySpec(key, result.getRealUrl(), result.getHeader(), result.getFormat(), result.getDrm(), result.getSubs(), result.getDanmaku(), metadata);
+        return new PlaySpec(key, result.getRealUrl(), result.getHeader(), result.getFormat(), result.getDrm(), result.getSubs(), metadata);
     }
 
     public static PlaySpec fromParse(Result result, String key, MediaMetadata metadata) {
-        return new PlaySpec(key, null, null, result.getFormat(), result.getDrm(), result.getSubs(), result.getDanmaku(), metadata);
+        return new PlaySpec(key, null, null, result.getFormat(), result.getDrm(), result.getSubs(), metadata);
     }
 
     public String getKey() {
@@ -105,15 +94,6 @@ public class PlaySpec {
         return subs;
     }
 
-    public List<Danmaku> getDanmakus() {
-        return Collections.unmodifiableList(danmakus);
-    }
-
-    @Nullable
-    public Danmaku getSelectedDanmaku() {
-        return danmakus.stream().filter(Danmaku::isSelected).findFirst().orElse(null);
-    }
-
     public MediaMetadata getMetadata() {
         return metadata;
     }
@@ -138,28 +118,5 @@ public class PlaySpec {
 
     private void clearForcedSubtitles() {
         for (Sub sub : subs) if (sub.isForced()) sub.setFlag(C.SELECTION_FLAG_AUTOSELECT);
-    }
-
-    public void selectDanmaku(Danmaku item) {
-        if (item == null || item.isEmpty()) return;
-        int index = danmakus.indexOf(item);
-        if (index < 0) danmakus.add(index = 0, item);
-        for (int i = 0; i < danmakus.size(); i++) danmakus.get(i).setSelected(i == index);
-    }
-
-    public void toggleDanmaku(Danmaku item) {
-        if (item == null || item.isEmpty()) return;
-        if (item.equals(getSelectedDanmaku())) clearDanmaku();
-        else selectDanmaku(item);
-    }
-
-    private void clearDanmaku() {
-        danmakus.forEach(item -> item.setSelected(false));
-    }
-
-    public void addDanmaku(Danmaku item) {
-        if (item == null || item.isEmpty() || danmakus.contains(item)) return;
-        item.setSelected(false);
-        danmakus.add(item);
     }
 }

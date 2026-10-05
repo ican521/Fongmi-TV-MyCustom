@@ -17,6 +17,8 @@ import com.fongmi.android.tv.player.media.MediaItemFactory;
 import com.fongmi.android.tv.player.media.PlaySpec;
 import com.fongmi.android.tv.setting.SubtitleSetting;
 
+import java.util.List;
+
 public class MpvPlayerEngine implements PlayerEngine, Player.Listener {
 
     private final MpvErrorMessageProvider provider;
@@ -71,14 +73,11 @@ public class MpvPlayerEngine implements PlayerEngine, Player.Listener {
 
     @Override
     public SecondarySubtitleState getSecondarySubtitleState() {
-        return new SecondarySubtitleState(player.getPrimaryTextTrackSelectionOverride(), player.getSecondaryTextTrackSelectionOverride(), player.getSecondaryTextTrackSelectionOverrides(), player.isSecondaryTextTrackSuppressed());
+        return new SecondarySubtitleState(null, null, List.of(), false);
     }
 
     @Override
     public void setSecondarySubtitleSelection(@Nullable TrackSelectionOverride selection) {
-        int mode = SubtitleSetting.getSecondaryMode();
-        applySecondarySubtitleMode(mode);
-        if (mode != SubtitleSetting.SECONDARY_MODE_DEFAULT) player.setSecondaryTextTrackSelectionOverride(selection);
     }
 
     @Override
@@ -143,7 +142,5 @@ public class MpvPlayerEngine implements PlayerEngine, Player.Listener {
     }
 
     private void applySecondarySubtitleMode(int mode) {
-        if (mode == SubtitleSetting.SECONDARY_MODE_DEFAULT) player.resetSecondaryTextTrackSelection();
-        else player.setSecondaryTextTrackAutoSelectionEnabled(mode == SubtitleSetting.SECONDARY_MODE_AUTO);
     }
 }

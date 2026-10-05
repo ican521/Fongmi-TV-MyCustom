@@ -18,12 +18,10 @@ import androidx.media3.common.TrackSelectionOverride;
 import androidx.media3.common.Tracks;
 import androidx.media3.common.VideoSize;
 import androidx.media3.ui.PlayerView;
-import androidx.media3.ui.danmaku.DanmakuConfig;
 
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.Constant;
 import com.fongmi.android.tv.R;
-import com.fongmi.android.tv.bean.Danmaku;
 import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.bean.Sub;
 import com.fongmi.android.tv.bean.Track;
@@ -36,7 +34,6 @@ import com.fongmi.android.tv.player.engine.PlayerEngineFactory;
 import com.fongmi.android.tv.player.media.PlaySpec;
 import com.fongmi.android.tv.player.parse.ParseJob;
 import com.fongmi.android.tv.player.track.TrackUtil;
-import com.fongmi.android.tv.setting.DanmakuSetting;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.PreloadSetting;
 import com.fongmi.android.tv.setting.SpeedSetting;
@@ -62,7 +59,6 @@ public class PlayerManager implements ParseCallback {
     private Player player;
 
     private long pendingStartPositionMs;
-    private boolean danmakuEnabled;
     private boolean initTrack;
     private int retry;
     private int decode;
@@ -74,7 +70,6 @@ public class PlayerManager implements ParseCallback {
         this.pendingStartPositionMs = C.TIME_UNSET;
         this.engine = PlayerEngineFactory.create(decode, listener);
         this.effects = new PlayerEffectManager(() -> engine);
-        this.danmakuEnabled = DanmakuSetting.isShow();
         this.player = engine.getPlayer();
     }
 
@@ -133,14 +128,6 @@ public class PlayerManager implements ParseCallback {
 
     public String getKey() {
         return spec != null ? spec.getKey() : null;
-    }
-
-    public List<Danmaku> getDanmakus() {
-        return spec != null ? spec.getDanmakus() : List.of();
-    }
-
-    private void notifyDanmakuSourceChanged() {
-        callback.onDanmakuSourceChanged(getSelectedDanmakuUri());
     }
 
     public MediaMetadata getMetadata() {
@@ -209,10 +196,6 @@ public class PlayerManager implements ParseCallback {
 
     public boolean haveChapter() {
         return !getCurrentMediaChapters().isEmpty();
-    }
-
-    public boolean haveDanmaku() {
-        return spec != null && spec.getSelectedDanmaku() != null;
     }
 
     public boolean canSetOpening(long position, long duration) {
@@ -306,16 +289,6 @@ public class PlayerManager implements ParseCallback {
         player.selectEdition(edition);
     }
 
-    public void setDanmakuConfig(DanmakuConfig config) {
-        callback.onDanmakuConfigChanged(config);
-    }
-
-    public void setDanmakuEnabled(boolean enabled) {
-        if (danmakuEnabled == enabled) return;
-        danmakuEnabled = enabled;
-        callback.onDanmakuEnabledChanged(danmakuEnabled);
-    }
-
     public void applySubtitleStyle() {
         if (engine != null) engine.applySubtitleStyle();
     }
@@ -326,10 +299,6 @@ public class PlayerManager implements ParseCallback {
 
     public void setSecondarySubtitleSelection(@Nullable TrackSelectionOverride selection) {
         if (engine != null) engine.setSecondarySubtitleSelection(selection);
-    }
-
-    public void sendDanmaku(String text) {
-        callback.onDanmakuSent(text);
     }
 
     public float setSpeed(float speed) {
@@ -545,7 +514,6 @@ public class PlayerManager implements ParseCallback {
         pendingPreload = null;
         initTrack = false;
         engine.start(spec, startPositionMs);
-        notifyDanmakuSourceChanged();
         App.post(runnable, timeout);
         callback.onPrepare();
     }
@@ -563,28 +531,6 @@ public class PlayerManager implements ParseCallback {
         if (preload == null || player.getPlaybackState() != Player.STATE_READY) return;
         pendingPreload = null;
         engine.preload(preload.spec(), preload.startPositionMs());
-    }
-
-    @Nullable
-    public Uri getSelectedDanmakuUri() {
-        Danmaku item = spec != null ? spec.getSelectedDanmaku() : null;
-        return item == null ? null : item.getUri();
-    }
-
-    public void setDanmaku(Danmaku item) {
-        if (spec == null) return;
-        spec.selectDanmaku(item);
-        notifyDanmakuSourceChanged();
-    }
-
-    public void toggleDanmaku(Danmaku item) {
-        if (spec == null) return;
-        spec.toggleDanmaku(item);
-        notifyDanmakuSourceChanged();
-    }
-
-    public void addDanmaku(Danmaku item) {
-        if (spec != null) spec.addDanmaku(item);
     }
 
     @Override
@@ -616,14 +562,6 @@ public class PlayerManager implements ParseCallback {
         void onError(String msg);
 
         void onPlayerRebuild(Player newPlayer);
-
-        void onDanmakuSourceChanged(@Nullable Uri uri);
-
-        void onDanmakuConfigChanged(DanmakuConfig config);
-
-        void onDanmakuEnabledChanged(boolean enabled);
-
-        void onDanmakuSent(String text);
     }
 
     private record PendingPreload(PlaySpec spec, long startPositionMs) {
@@ -686,7 +624,7 @@ public class PlayerManager implements ParseCallback {
             if (action != PlayerEngine.ErrorAction.RECOVERED) App.removeCallbacks(runnable);
             switch (action) {
                 case DECODE -> handleDecodeError(e);
-                case RECOVERED -> notifyDanmakuSourceChanged();
+                case RECOVERED -> { }
                 case FATAL -> callback.onError(engine.getErrorMessage(e));
             }
         }

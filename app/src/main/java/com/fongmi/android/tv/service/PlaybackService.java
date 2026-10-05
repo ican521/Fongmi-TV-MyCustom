@@ -257,9 +257,6 @@ public class PlaybackService extends MediaLibraryService implements MediaLibrary
         if (event.isVod()) {
             BrowseTree.clearVod();
             session.notifyChildrenChanged("VOD", 0, null);
-        } else if (event.isLive()) {
-            BrowseTree.clearLive();
-            session.notifyChildrenChanged("LIVE", 0, null);
         }
     }
 
@@ -505,26 +502,6 @@ public class PlaybackService extends MediaLibraryService implements MediaLibrary
         sessionPlayer.addListener(listener);
         if (session != null) session.setPlayer(wrap(newPlayer));
         playerCallbacks.forEach(callback -> callback.onPlayerRebuild(newPlayer));
-    }
-
-    @Override
-    public void onDanmakuSourceChanged(@Nullable Uri uri) {
-        playerCallbacks.forEach(callback -> callback.onDanmakuSourceChanged(uri));
-    }
-
-    @Override
-    public void onDanmakuConfigChanged(DanmakuConfig config) {
-        playerCallbacks.forEach(callback -> callback.onDanmakuConfigChanged(config));
-    }
-
-    @Override
-    public void onDanmakuEnabledChanged(boolean enabled) {
-        playerCallbacks.forEach(callback -> callback.onDanmakuEnabledChanged(enabled));
-    }
-
-    @Override
-    public void onDanmakuSent(String text) {
-        playerCallbacks.forEach(callback -> callback.onDanmakuSent(text));
     }
 
     private final Player.Listener listener = new Player.Listener() {

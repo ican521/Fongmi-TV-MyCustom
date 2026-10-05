@@ -29,7 +29,6 @@ public class Source {
         extractors.add(new Push());
         extractors.add(new Strm());
         extractors.add(new Thunder());
-        extractors.add(new TVBus());
         extractors.add(new Video());
         extractors.add(new YouTube());
     }

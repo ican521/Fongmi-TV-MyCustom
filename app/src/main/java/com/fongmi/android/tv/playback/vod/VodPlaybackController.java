@@ -116,7 +116,6 @@ public class VodPlaybackController {
         applyPlaybackState(result, request);
         renderPlaybackResult(result);
         updatePlaybackPosition(result);
-        host.loadDanmaku(result, state.getHistory(), episode);
         startPlayback(result, startPositionMs(), episode);
         preloader.update(result);
     }

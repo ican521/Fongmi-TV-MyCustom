@@ -11,11 +11,9 @@ import androidx.viewbinding.ViewBinding;
 import com.fongmi.android.tv.BuildConfig;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.Updater;
-import com.fongmi.android.tv.api.config.LiveConfig;
 import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.api.config.WallConfig;
 import com.fongmi.android.tv.bean.Config;
-import com.fongmi.android.tv.bean.Live;
 import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.databinding.FragmentSettingBinding;
 import com.fongmi.android.tv.db.BackupManager;
@@ -23,7 +21,6 @@ import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.impl.ConfigListener;
-import com.fongmi.android.tv.impl.LiveListener;
 import com.fongmi.android.tv.impl.SiteListener;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
@@ -31,7 +28,6 @@ import com.fongmi.android.tv.ui.activity.HomeActivity;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.ConfigDialog;
 import com.fongmi.android.tv.ui.dialog.HistoryDialog;
-import com.fongmi.android.tv.ui.dialog.LiveDialog;
 import com.fongmi.android.tv.ui.dialog.RestoreDialog;
 import com.fongmi.android.tv.ui.dialog.SiteDialog;
 import com.fongmi.android.tv.ui.dialog.ThemeDialog;
@@ -50,7 +46,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SettingFragment extends BaseFragment implements ConfigListener, SiteListener, LiveListener, ThemeDialog.Listener {
+public class SettingFragment extends BaseFragment implements ConfigListener, SiteListener, ThemeDialog.Listener {
 
     private FragmentSettingBinding mBinding;
     private String[] size;
@@ -88,7 +84,6 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     protected void initView() {
         EventBus.getDefault().register(this);
         mBinding.vodUrl.setText(VodConfig.getDesc());
-        mBinding.liveUrl.setText(LiveConfig.getDesc());
         mBinding.wallUrl.setText(WallConfig.getDesc());
         mBinding.versionText.setText(BuildConfig.VERSION_NAME);
         setOtherText();
@@ -115,24 +110,19 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     protected void initEvent() {
         mBinding.vod.setOnClickListener(this::onVod);
         mBinding.doh.setOnClickListener(this::setDoh);
-        mBinding.live.setOnClickListener(this::onLive);
         mBinding.wall.setOnClickListener(this::onWall);
         mBinding.size.setOnClickListener(this::setSize);
         mBinding.cache.setOnClickListener(this::onCache);
         mBinding.backup.setOnClickListener(this::onBackup);
         mBinding.player.setOnClickListener(this::onPlayer);
-        mBinding.danmaku.setOnClickListener(this::onDanmaku);
         mBinding.restore.setOnClickListener(this::onRestore);
         mBinding.version.setOnClickListener(this::onVersion);
         mBinding.vod.setOnLongClickListener(this::onVodEdit);
         mBinding.vodHome.setOnClickListener(this::onVodHome);
-        mBinding.live.setOnLongClickListener(this::onLiveEdit);
-        mBinding.liveHome.setOnClickListener(this::onLiveHome);
         mBinding.wall.setOnLongClickListener(this::onWallEdit);
         mBinding.incognito.setOnClickListener(this::setIncognito);
         mBinding.vodHistory.setOnClickListener(this::onVodHistory);
         mBinding.themeColor.setOnClickListener(this::onThemeColor);
-        mBinding.liveHistory.setOnClickListener(this::onLiveHistory);
         mBinding.wallDefault.setOnClickListener(this::setWallDefault);
         mBinding.wallRefresh.setOnClickListener(this::setWallRefresh);
         mBinding.wallRefresh.setOnLongClickListener(this::onWallHistory);
@@ -151,9 +141,6 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         switch (config.getType()) {
             case 0:
                 VodConfig.load(config, getCallback());
-                break;
-            case 1:
-                LiveConfig.load(config, getCallback());
                 break;
             case 2:
                 Setting.putWall(0);
@@ -189,11 +176,6 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     }
 
     @Override
-    public void setLive(Live item) {
-        LiveConfig.get().setHome(item);
-    }
-
-    @Override
     public void setTheme(int color) {
         Setting.putThemeColor(color);
         RefreshEvent.theme();
@@ -203,21 +185,12 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         ConfigDialog.create().vod().show(this);
     }
 
-    private void onLive(View view) {
-        ConfigDialog.create().live().show(this);
-    }
-
     private void onWall(View view) {
         ConfigDialog.create().wall().show(this);
     }
 
     private boolean onVodEdit(View view) {
         ConfigDialog.create().vod().edit().show(this);
-        return true;
-    }
-
-    private boolean onLiveEdit(View view) {
-        ConfigDialog.create().live().edit().show(this);
         return true;
     }
 
@@ -230,24 +203,12 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         SiteDialog.create().search().change().show(this);
     }
 
-    private void onLiveHome(View view) {
-        LiveDialog.show(this);
-    }
-
     private void onVodHistory(View view) {
         HistoryDialog.create().vod().show(this);
     }
 
-    private void onLiveHistory(View view) {
-        HistoryDialog.create().live().show(this);
-    }
-
     private void onPlayer(View view) {
         getRoot().change(2);
-    }
-
-    private void onDanmaku(View view) {
-        getRoot().change(3);
     }
 
     private void onThemeColor(View view) {
@@ -342,7 +303,6 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
 
     private void initConfig() {
         VodConfig.get().init().load(getCallback());
-        LiveConfig.get().init().load();
         WallConfig.get().init().load();
     }
 
@@ -350,7 +310,6 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     public void onConfigEvent(ConfigEvent event) {
         if (event.type() != ConfigEvent.Type.COMMON) return;
         mBinding.vodUrl.setText(VodConfig.getDesc());
-        mBinding.liveUrl.setText(LiveConfig.getDesc());
         mBinding.wallUrl.setText(WallConfig.getDesc());
     }
 

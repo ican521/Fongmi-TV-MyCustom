@@ -23,32 +23,17 @@ public class BrowseTree {
 
     private static final String ROOT = "ROOT";
     private static final String VOD = "VOD";
-    private static final String LIVE = "LIVE";
     private static final Map<String, Result> browseResultMap = new ConcurrentHashMap<>();
     private static final MediaItem ROOT_ITEM = folder(ROOT, "影視");
     private static final MediaItem VOD_FOLDER = folder(VOD, "點播");
-    private static final MediaItem LIVE_FOLDER;
-
-    static {
-        Bundle extras = new Bundle();
-        extras.putInt(CONTENT_STYLE_BROWSABLE_HINT, CONTENT_STYLE_LIST);
-        MediaMetadata meta = new MediaMetadata.Builder().setTitle("直播").setIsBrowsable(true).setIsPlayable(false).setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED).setExtras(extras).build();
-        LIVE_FOLDER = new MediaItem.Builder().setMediaId(LIVE).setMediaMetadata(meta).build();
-    }
 
     public static void clear() {
         clearVod();
-        clearLive();
     }
 
     public static void clearVod() {
         clearPending(VodBrowse.VOD_EP);
         VodBrowse.clear();
-    }
-
-    public static void clearLive() {
-        clearPending(LiveBrowse.LIVE_CH);
-        LiveBrowse.clear();
     }
 
     public static MediaItem getRootItem() {
@@ -63,13 +48,9 @@ public class BrowseTree {
     @NonNull
     private static ImmutableList<MediaItem> getChildrenInternal(@NonNull String parentId) {
         return switch (parentId) {
-            case ROOT -> ImmutableList.of(VOD_FOLDER, LIVE_FOLDER);
+            case ROOT -> ImmutableList.of(VOD_FOLDER);
             case VOD -> VodBrowse.getHistory();
-            case LIVE -> LiveBrowse.getGroups();
-            default -> {
-                if (parentId.startsWith(LiveBrowse.LIVE_GROUP)) yield LiveBrowse.getChannels(parentId);
-                yield ImmutableList.of();
-            }
+            default -> ImmutableList.of();
         };
     }
 
@@ -78,8 +59,7 @@ public class BrowseTree {
         return switch (mediaId) {
             case ROOT -> ROOT_ITEM;
             case VOD -> VOD_FOLDER;
-            case LIVE -> LIVE_FOLDER;
-            default -> mediaId.startsWith(LiveBrowse.LIVE_GROUP) || mediaId.startsWith(LiveBrowse.LIVE_CH) ? LiveBrowse.getItem(mediaId) : VodBrowse.getItem(mediaId);
+            default -> VodBrowse.getItem(mediaId);
         };
     }
 
@@ -95,7 +75,6 @@ public class BrowseTree {
 
     @Nullable
     public static MediaItem resolve(@NonNull String mediaId) throws Exception {
-        if (mediaId.startsWith(LiveBrowse.LIVE_CH)) return LiveBrowse.resolve(mediaId);
         return VodBrowse.resolve(mediaId);
     }
 
@@ -111,9 +90,7 @@ public class BrowseTree {
 
     @Nullable
     public static MediaItem navigate(@NonNull String mediaId, int delta) throws Exception {
-        MediaItem vod = VodBrowse.navigate(mediaId, delta);
-        if (vod != null) return vod;
-        return LiveBrowse.navigate(mediaId, delta);
+        return VodBrowse.navigate(mediaId, delta);
     }
 
     public static long consumeResumePosition() {

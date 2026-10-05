@@ -91,6 +91,7 @@ dependencies {
     implementation project(':chaquo')
     implementation project(':quickjs')
     implementation libs.appcompat
+    implementation "androidx.mediarouter:mediarouter:1.8.1"
     implementation libs.lifecycle.service
     implementation libs.media
     implementation libs.palette

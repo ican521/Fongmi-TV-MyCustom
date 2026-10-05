@@ -19,10 +19,8 @@ import androidx.viewbinding.ViewBinding;
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.Updater;
-import com.fongmi.android.tv.api.config.LiveConfig;
 import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.api.config.WallConfig;
-import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.databinding.ActivityHomeBinding;
 import com.fongmi.android.tv.db.BackupManager;
 import com.fongmi.android.tv.event.ConfigEvent;
@@ -36,11 +34,10 @@ import com.fongmi.android.tv.server.Server;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.ui.base.BaseActivity;
 import com.fongmi.android.tv.ui.custom.FragmentStateManager;
-import com.fongmi.android.tv.ui.fragment.SettingDanmakuFragment;
-import com.fongmi.android.tv.ui.fragment.SettingDecodeFragment;
 import com.fongmi.android.tv.ui.fragment.SettingFragment;
 import com.fongmi.android.tv.ui.fragment.SettingPlayerFragment;
 import com.fongmi.android.tv.ui.fragment.SettingPreloadFragment;
+import com.fongmi.android.tv.ui.fragment.SettingDecodeFragment;
 import com.fongmi.android.tv.ui.fragment.VodFragment;
 import com.fongmi.android.tv.utils.FileChooser;
 import com.fongmi.android.tv.utils.Notify;
@@ -88,7 +85,6 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
 
     @Override
     protected void initEvent() {
-        mBinding.navigation.findViewById(R.id.live).setOnLongClickListener(this::addShortcut);
     }
 
     private void checkAction(Intent intent) {
@@ -103,11 +99,7 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     }
 
     private void checkType(Intent intent) {
-        if ("text/plain".equals(intent.getType()) || UrlUtil.path(intent.getData()).endsWith(".m3u")) {
-            FileChooser.getUri(intent, uri -> loadLive(UrlUtil.toLocalUrl(uri)));
-        } else {
-            FileChooser.getUri(intent, uri -> VideoActivity.file(this, uri));
-        }
+        FileChooser.getUri(intent, uri -> VideoActivity.file(this, uri));
     }
 
     private void initFragment(Bundle savedInstanceState) {
@@ -115,9 +107,8 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
             case 0 -> VodFragment.newInstance();
             case 1 -> SettingFragment.newInstance();
             case 2 -> SettingPlayerFragment.newInstance();
-            case 3 -> SettingDanmakuFragment.newInstance();
-            case 4 -> SettingPreloadFragment.newInstance();
-            case 5 -> SettingDecodeFragment.newInstance();
+            case 3 -> SettingPreloadFragment.newInstance();
+            case 4 -> SettingDecodeFragment.newInstance();
             default -> null;
         });
         if (savedInstanceState == null) change(0);
@@ -125,7 +116,6 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
 
     private void initConfig() {
         VodConfig.get().init().load(getCallback());
-        LiveConfig.get().init().load();
         WallConfig.get().init();
     }
 
@@ -145,32 +135,9 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         };
     }
 
-    private void loadLive(String url) {
-        if (isFinishing() || isDestroyed()) return;
-        LiveConfig.load(Config.find(url, 1), new Callback() {
-            @Override
-            public void success() {
-                openLive();
-            }
-        });
-    }
-
     private void setNavigation() {
         mBinding.navigation.getMenu().findItem(R.id.vod).setVisible(true);
         mBinding.navigation.getMenu().findItem(R.id.setting).setVisible(true);
-        mBinding.navigation.getMenu().findItem(R.id.live).setVisible(LiveConfig.hasUrl());
-    }
-
-    private boolean openLive() {
-        LiveActivity.start(this);
-        return false;
-    }
-
-    private boolean addShortcut(View view) {
-        ShortcutInfoCompat info = new ShortcutInfoCompat.Builder(this, getString(R.string.nav_live)).setIcon(IconCompat.createWithResource(this, R.mipmap.ic_launcher)).setIntent(new Intent(Intent.ACTION_VIEW, null, this, LiveActivity.class)).setShortLabel(getString(R.string.nav_live)).build();
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(this, ShortcutReceiver.class).setAction(ShortcutReceiver.ACTION), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        ShortcutManagerCompat.requestPinShortcut(this, info, pendingIntent.getIntentSender());
-        return true;
     }
 
     public void change(int position) {
@@ -186,9 +153,6 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
                 break;
             case COMMON:
                 setNavigation();
-                break;
-            case BOOT:
-                LiveActivity.start(this);
                 break;
         }
     }
@@ -208,7 +172,6 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.setting) return mManager.change(1);
         if (item.getItemId() == R.id.vod) return mManager.change(0);
-        if (item.getItemId() == R.id.live) return openLive();
         return false;
     }
 
@@ -243,7 +206,6 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
 
     @Override
     protected void onDestroy() {
-        LiveConfig.get().clear();
         VodConfig.get().clear();
         BackupManager.backup();
         OkHttp.get().clear();

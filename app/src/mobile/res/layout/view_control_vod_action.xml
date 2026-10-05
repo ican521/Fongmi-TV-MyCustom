@@ -85,13 +85,6 @@
             android:text="@string/play_track_video" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/danmaku"
-            style="@style/Control"
-            android:text="@string/danmaku"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/edition"
             style="@style/Control"
             android:text="@string/play_edition"

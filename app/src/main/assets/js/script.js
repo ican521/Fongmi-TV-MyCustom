@@ -1,4 +1,4 @@
-﻿const icDir = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F5A623'><path d='M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>`;
+const icDir = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F5A623'><path d='M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>`;
 const icFile = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23717970'><path d='M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z'/></svg>`;
 let currentRoot = '';
 let currentFile = '';
@@ -7,8 +7,6 @@ let longPressTimer = null;
 let longPressTriggered = false;
 let pendingDelFolder = null;
 let warnToastTimer = null;
-let danmakuMode = 1;
-let danmakuSize = 25;
 let dialogClosing = false;
 
 function search() {
@@ -21,37 +19,6 @@ function push() {
 
 function setting() {
     doAction('setting', { text: $('#setting_text').val(), name: $('#setting_name').val() });
-}
-
-function sendDanmaku() {
-    const text = $('#danmaku_text').val().trim();
-    if (!text) return;
-    doAction('danmaku', { text: `[0.0,${danmakuMode},${danmakuSize},16777215]${text}` });
-    $('#danmaku_text').val('');
-}
-
-function showDanmakuModeDialog() {
-    $('#danmakuModeDialog .md-dialog-list-item').removeClass('active');
-    $(`#danmakuModeDialog .md-dialog-list-item[data-val="${danmakuMode}"]`).addClass('active');
-    openDialog('danmakuModeDialog');
-}
-
-function setDanmakuMode(val, label) {
-    danmakuMode = val;
-    $('#danmaku_mode_label').text(label);
-    closeDialog('danmakuModeDialog');
-}
-
-function showDanmakuSizeDialog() {
-    $('#danmakuSizeDialog .md-dialog-list-item').removeClass('active');
-    $(`#danmakuSizeDialog .md-dialog-list-item[data-val="${danmakuSize}"]`).addClass('active');
-    openDialog('danmakuSizeDialog');
-}
-
-function setDanmakuSize(val, label) {
-    danmakuSize = val;
-    $('#danmaku_size_label').text(label);
-    closeDialog('danmakuSizeDialog');
 }
 
 function doAction(action, kv) {
@@ -266,11 +233,11 @@ function warnToast(msg) {
 }
 
 function showPanel(id) {
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 4; i++) {
         document.getElementById('panel' + i).classList.toggle('active', i === id);
         document.getElementById('tab' + i).classList.toggle('active', i === id);
     }
-    if (id === 5 && document.getElementById('file_list').innerHTML === '') listFile('');
+    if (id === 4 && document.getElementById('file_list').innerHTML === '') listFile('');
 }
 
 const tab = parseInt(new URLSearchParams(window.location.search).get('tab')) || 1;
@@ -287,7 +254,6 @@ window.addEventListener('popstate', function () {
 $(function () {
     $('#keyword').on('keydown', function (e) { if (e.key === 'Enter') { this.blur(); search(); } });
     $('#push_url').on('keydown', function (e) { if (e.key === 'Enter') { this.blur(); push(); } });
-    $('#danmaku_text').on('keydown', function (e) { if (e.key === 'Enter') { this.blur(); sendDanmaku(); } });
     $('#setting_name, #setting_text').on('keydown', function (e) { if (e.key === 'Enter') { this.blur(); setting(); } });
     $('#newFolderContent').on('keydown', function (e) { if (e.key === 'Enter') { this.blur(); confirmNewFolder(1); } });
 });

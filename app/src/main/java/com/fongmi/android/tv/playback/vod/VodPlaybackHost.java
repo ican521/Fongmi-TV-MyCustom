@@ -66,8 +66,6 @@ public interface VodPlaybackHost {
 
     void clearPreload();
 
-    void loadDanmaku(Result result, History history, Episode episode);
-
     void renderDetail(Vod item, History history);
 
     void renderVodUpdate(Vod item);
