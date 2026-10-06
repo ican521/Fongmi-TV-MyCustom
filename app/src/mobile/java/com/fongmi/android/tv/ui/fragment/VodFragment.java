@@ -86,6 +86,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private final Runnable mHotTask = this::showNextHot;
     private List<Word.Data> mHotWords = List.of();
     private int mHotIndex;
+    // 胶囊当前正在展示的热搜词（点搜索图标时直接拿它发起搜索）。
+    private String mCurrentHot = "";
 
     public static VodFragment newInstance() {
         return new VodFragment();
@@ -137,8 +139,12 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mBinding.link.setOnClickListener(this::onLink);
         mBinding.filter.setOnClickListener(this::onFilter);
         mBinding.filter.setOnLongClickListener(this::onLink);
-        // 整个搜索胶囊可点：点击任意位置（含右侧搜索图标）都跳转搜索页；历史钮独立点击。
+        // 点胶囊空白处进入搜索输入页；点右侧搜索图标则直接搜索当前热搜词；历史钮独立点击。
         mBinding.searchPill.setOnClickListener(v -> SearchActivity.start(requireActivity()));
+        mBinding.searchIcon.setOnClickListener(v -> {
+            if (TextUtils.isEmpty(mCurrentHot)) SearchActivity.start(requireActivity());
+            else SearchActivity.start(requireActivity(), mCurrentHot);
+        });
         mBinding.history.setOnClickListener(v -> HistoryActivity.start(requireActivity()));
         mBinding.pager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
@@ -355,7 +361,10 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private void showNextHot() {
         if (!mHotWords.isEmpty()) {
             String title = mHotWords.get(mHotIndex % mHotWords.size()).getTitle();
-            if (!TextUtils.isEmpty(title)) mBinding.hotWord.setText(title);
+            if (!TextUtils.isEmpty(title)) {
+                mBinding.hotWord.setText(title);
+                mCurrentHot = title;
+            }
             mHotIndex++;
         }
         mHotHandler.removeCallbacks(mHotTask);
