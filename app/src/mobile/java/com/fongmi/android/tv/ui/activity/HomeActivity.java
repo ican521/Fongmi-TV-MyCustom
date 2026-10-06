@@ -122,7 +122,7 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
             v.setPadding(v.getPaddingLeft(), top, v.getPaddingRight(), 0);
             return insets;
         });
-        // 允许子页面（点播页渐变顶栏）向上绘制到状态栏对应的 padding 区域，不被 ViewPager2 及其内部 RecyclerView 裁切。
+        // 允许子页面内容（含悬浮按钮入场等）绘制到 padding 区域边缘，不被 ViewPager2 及其内部 RecyclerView 裁切。
         mPager.setClipChildren(false);
         mPager.setClipToPadding(false);
         ViewGroup inner = (ViewGroup) mPager.getChildAt(0);

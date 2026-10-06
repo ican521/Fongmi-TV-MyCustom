@@ -10,8 +10,6 @@ import android.animation.ValueAnimator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
@@ -94,27 +92,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         setRecyclerView();
         setViewModel();
         initFabEnter();
-        initAppBarInset();
         initAppBarEnter();
         showProgress();
-    }
-
-    /**
-     * 主页 ViewPager2 整体有状态栏高度的上 padding，顶栏默认从状态栏下方开始。
-     * 这里把 appBar 负 margin 上移一个状态栏高度、并加等高顶部内边距，
-     * 让黑色渐变从屏幕最顶（状态栏后方）开始，标题/tab 仍位于状态栏之下。
-     */
-    private void initAppBarInset() {
-        ViewCompat.setOnApplyWindowInsetsListener(mBinding.appBar, (v, insets) -> {
-            int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-            if (lp.topMargin != -top) {
-                lp.topMargin = -top;
-                v.setLayoutParams(lp);
-            }
-            v.setPadding(v.getPaddingLeft(), top, v.getPaddingRight(), v.getPaddingBottom());
-            return insets;
-        });
     }
 
     /** 按钮初始置于屏幕右边框之外、透明，等待入场动画。 */
