@@ -13,22 +13,19 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- 顶栏后声明使其绘制在内容之上。顶栏本身不设背景：第一行标题栏与“我的收藏”完全同款，
-         使用 MaterialToolbar 默认背景（?attr/colorSurface），状态栏区域由主页 padding 露出窗口底色；
-         仅第二行分类 tab 保留纯黑→透明渐变，滚动时内容从其下穿过。 -->
-    <com.google.android.material.appbar.AppBarLayout
+    <!-- 顶栏后声明使其绘制在内容之上。结构与“我的收藏”页完全一致：纵向 LinearLayoutCompat 内
+         独立放置 MaterialToolbar（不经 AppBarLayout，避免其把透明背景同步给标题栏）。
+         第一行标题栏沿用收藏页同款默认背景（?attr/colorSurface），不透明；
+         第二行分类 tab 承载纯黑→透明渐变，滚动时内容从其下穿过。 -->
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:elevation="0dp"
-        app:elevation="0dp"
-        app:liftOnScrollColor="@color/transparent">
+        android:orientation="vertical">
 
-        <!-- 第一行：与“我的收藏/设置”完全一致的标题栏：左上“首页”，右侧搜索/历史菜单。
-             不设背景，沿用 Material3 Toolbar 默认 ?attr/colorSurface，实现方式同收藏页。 -->
+        <!-- 第一行：与“我的收藏/设置”完全一致的标题栏：左上“首页”，右侧搜索/历史菜单。 -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
@@ -67,7 +64,7 @@
 
         </FrameLayout>
 
-    </com.google.android.material.appbar.AppBarLayout>
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
     <include
         android:id="@+id/progress"
