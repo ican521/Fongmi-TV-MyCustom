@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,7 +38,6 @@ import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.activity.SettingActivity;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.ConfigDialog;
-import com.fongmi.android.tv.ui.dialog.HistoryDialog;
 import com.fongmi.android.tv.ui.dialog.RestoreDialog;
 import com.fongmi.android.tv.ui.dialog.SiteDialog;
 import com.fongmi.android.tv.utils.FileUtil;
@@ -81,12 +82,29 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     @Override
     protected void initView() {
         EventBus.getDefault().register(this);
-        mBinding.vodUrl.setText(VodConfig.getDesc());
+        updateVodUrl();
         mBinding.versionText.setText(BuildConfig.VERSION_NAME);
+        setRowPressBackground(mBinding.siteRow, true, false);
+        setRowPressBackground(mBinding.wall, false, true);
         setRowPressBackground(mBinding.sizeRow, true, false);
         setRowPressBackground(mBinding.dohRow, false, true);
         setOtherText();
         setCacheText();
+    }
+
+    /**
+     * 站源地址显示：优先显示完整地址；显示不下时先隐藏开头的 http:// 或 https://，
+     * 仍然放不下再中间省略（ellipsize=middle）。
+     */
+    private void updateVodUrl() {
+        String desc = VodConfig.getDesc();
+        mBinding.vodUrl.setText(desc);
+        mBinding.vodUrl.post(() -> {
+            android.text.Layout layout = mBinding.vodUrl.getLayout();
+            if (layout == null || layout.getEllipsisCount(0) <= 0) return;
+            String stripped = desc.replaceFirst("^(?i:https?://)", "");
+            if (!TextUtils.equals(stripped, desc)) mBinding.vodUrl.setText(stripped);
+        });
     }
 
     /**
@@ -134,10 +152,10 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         mBinding.restore.setOnClickListener(this::onRestore);
         mBinding.version.setOnClickListener(this::onVersion);
         mBinding.vod.setOnLongClickListener(this::onVodEdit);
-        mBinding.vodHome.setOnClickListener(this::onVodHome);
+        mBinding.siteRow.setOnClickListener(this::onVodHome);
         mBinding.wall.setOnLongClickListener(this::onWallEdit);
         mBinding.incognito.setOnClickListener(this::setIncognito);
-        mBinding.vodHistory.setOnClickListener(this::onVodHistory);
+        mBinding.vodToggle.setOnClickListener(v -> showVodHistoryMenu());
         mBinding.sizeRow.setOnClickListener(v -> showSizeMenu());
         mBinding.dohRow.setOnClickListener(v -> showDohMenu());
     }
@@ -211,8 +229,16 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         SiteDialog.create().search().change().show(this);
     }
 
-    private void onVodHistory(View view) {
-        HistoryDialog.create().vod().show(this);
+    private void showVodHistoryMenu() {
+        List<Config> configs = Config.getAll(0);
+        if (!configs.isEmpty()) configs.remove(0);
+        if (configs.isEmpty()) {
+            Notify.show(R.string.history_empty);
+            return;
+        }
+        String[] items = new String[configs.size()];
+        for (int i = 0; i < configs.size(); i++) items[i] = configs.get(i).getDesc();
+        showOptionMenu(mBinding.vodToggle, items, -1, mBinding.vod.getWidth(), index -> setConfig(configs.get(index)));
     }
 
     private void onPlayer(View view) {
@@ -229,7 +255,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     }
 
     private void showSizeMenu() {
-        showOptionMenu(mBinding.sizeToggle, size, PlayerSetting.getSize(), index -> {
+        showOptionMenu(mBinding.sizeToggle, size, PlayerSetting.getSize(), 0, index -> {
             PlayerSetting.putSize(index);
             mBinding.sizeText.setText(size[index]);
             RefreshEvent.size();
@@ -240,24 +266,26 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         List<Doh> list = VodConfig.get().getDoh();
         String[] items = new String[list.size()];
         for (int i = 0; i < list.size(); i++) items[i] = list.get(i).getName();
-        showOptionMenu(mBinding.dohToggle, items, getDohIndex(), index -> setDoh(list.get(index)));
+        showOptionMenu(mBinding.dohToggle, items, getDohIndex(), 0, index -> setDoh(list.get(index)));
     }
 
     /**
      * 照搬参考项目 SegmentedDropdownItem 的交互：点击后在箭头处弹出深色圆角菜单，
      * 当前选项以主题主色文字 + 同色对勾标记，其余为白色文字，点外部关闭。
+     *
+     * @param widthPx 菜单固定宽度（历史站源长地址使用），0 表示包裹内容。
      */
-    private void showOptionMenu(View anchor, String[] items, int selectedIndex, OnOptionPicked listener) {
+    private void showOptionMenu(View anchor, String[] items, int selectedIndex, int widthPx, OnOptionPicked listener) {
         TypedValue value = new TypedValue();
         requireContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, value, true);
         int colorPrimary = value.data;
 
         LinearLayout container = new LinearLayout(requireContext());
         container.setOrientation(LinearLayout.VERTICAL);
-        container.setBackgroundResource(R.drawable.shape_menu_bg);
         int pad = ResUtil.dp2px(8);
         container.setPadding(pad, pad, pad, pad);
 
+        int rowWidth = widthPx > 0 ? LinearLayout.LayoutParams.MATCH_PARENT : LinearLayout.LayoutParams.WRAP_CONTENT;
         for (int i = 0; i < items.length; i++) {
             final int index = i;
             boolean selected = i == selectedIndex;
@@ -274,6 +302,8 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
             text.setText(items[i]);
             text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
             text.setTextColor(selected ? colorPrimary : Color.WHITE);
+            text.setSingleLine(true);
+            text.setEllipsize(TextUtils.TruncateAt.MIDDLE);
             LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
             textParams.setMarginEnd(ResUtil.dp2px(20));
             row.addView(text, textParams);
@@ -285,11 +315,21 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
             int checkSize = ResUtil.dp2px(20);
             row.addView(check, new LinearLayout.LayoutParams(checkSize, checkSize));
 
-            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            container.addView(row, rowParams);
+            container.addView(row, new LinearLayout.LayoutParams(rowWidth, LinearLayout.LayoutParams.WRAP_CONTENT));
         }
 
-        PopupWindow popup = new PopupWindow(container, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, true);
+        // 深色圆角背景放在可滚动容器上，长列表最多 264dp 高。
+        final int maxHeight = ResUtil.dp2px(264);
+        ScrollView scrollView = new ScrollView(requireContext()) {
+            @Override
+            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST));
+            }
+        };
+        scrollView.setBackgroundResource(R.drawable.shape_menu_bg);
+        scrollView.addView(container, new ScrollView.LayoutParams(ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+
+        PopupWindow popup = new PopupWindow(scrollView, widthPx > 0 ? widthPx : LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, true);
         popup.setElevation(ResUtil.dp2px(8));
         popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popup.setOutsideTouchable(true);
@@ -303,15 +343,16 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
             });
         }
 
-        container.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int widthSpec = widthPx > 0 ? View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY) : View.MeasureSpec.UNSPECIFIED;
+        scrollView.measure(widthSpec, View.MeasureSpec.UNSPECIFIED);
         int gap = ResUtil.dp2px(4);
         int[] location = new int[2];
         anchor.getLocationOnScreen(location);
         int spaceBelow = ResUtil.getScreenHeight(requireContext()) - location[1] - anchor.getHeight();
-        if (spaceBelow >= container.getMeasuredHeight() + gap) {
+        if (spaceBelow >= scrollView.getMeasuredHeight() + gap) {
             popup.showAsDropDown(anchor, 0, gap, Gravity.END);
         } else {
-            popup.showAsDropDown(anchor, 0, -(anchor.getHeight() + container.getMeasuredHeight() + gap), Gravity.END);
+            popup.showAsDropDown(anchor, 0, -(anchor.getHeight() + scrollView.getMeasuredHeight() + gap), Gravity.END);
         }
     }
 
@@ -372,7 +413,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onConfigEvent(ConfigEvent event) {
         if (event.type() != ConfigEvent.Type.COMMON) return;
-        mBinding.vodUrl.setText(VodConfig.getDesc());
+        updateVodUrl();
     }
 
     @Override
