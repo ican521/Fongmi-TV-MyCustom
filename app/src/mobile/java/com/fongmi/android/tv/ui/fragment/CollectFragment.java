@@ -24,6 +24,7 @@ import com.fongmi.android.tv.bean.Vod;
 import com.fongmi.android.tv.databinding.FragmentCollectBinding;
 import com.fongmi.android.tv.model.SiteViewModel;
 import com.fongmi.android.tv.ui.activity.FolderActivity;
+import com.fongmi.android.tv.ui.activity.SearchActivity;
 import com.fongmi.android.tv.ui.activity.VideoActivity;
 import com.fongmi.android.tv.ui.adapter.CollectAdapter;
 import com.fongmi.android.tv.ui.adapter.SearchAdapter;
@@ -159,6 +160,9 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
     public void onItemClick(Vod item) {
         if (item.isFolder()) {
             FolderActivity.start(requireActivity(), item.getSiteKey(), Result.folder(item));
+            // 点播/收藏借道搜索的“中转”场景：进入文件夹后同样把搜索页移出返回栈，
+            // 避免从文件夹再进入视频详情后，返回落回搜索页需要多按一次。
+            if (requireActivity() instanceof SearchActivity && ((SearchActivity) requireActivity()).isAutoFinish()) requireActivity().finish();
         } else {
             VideoActivity.collect(requireActivity(), item.getSiteKey(), item.getId(), item.getName(), item.getPic());
             // 搜索结果进入视频后，将搜索页从返回栈移除，使视频页直接叠在主页之上，

@@ -106,7 +106,7 @@ public class KeepFragment extends BaseFragment implements KeepAdapter.OnClickLis
     @Override
     public void onItemClick(Keep item) {
         Config config = Config.find(item.getCid());
-        if (config == null) SearchActivity.start(requireActivity(), item.getVodName());
+        if (config == null) SearchActivity.start(requireActivity(), item.getVodName(), true);
         else if (item.getCid() != VodConfig.getCid()) loadConfig(config, item);
         else VideoActivity.start(requireActivity(), item.getSiteKey(), item.getVodId(), item.getVodName(), item.getVodPic());
     }

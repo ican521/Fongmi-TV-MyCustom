@@ -210,7 +210,7 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
         } else if (item.isFolder()) {
             getParent().openFolder(item.getId(), mExtends);
         } else {
-            if (getSite().isIndex()) SearchActivity.start(requireActivity(), item.getName());
+            if (getSite().isIndex()) SearchActivity.start(requireActivity(), item.getName(), true);
             else VideoActivity.start(requireActivity(), getKey(), item.getId(), item.getName(), item.getPic(), isFolder() ? item.getName() : null);
         }
     }
