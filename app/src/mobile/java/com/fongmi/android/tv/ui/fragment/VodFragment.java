@@ -1,6 +1,5 @@
 package com.fongmi.android.tv.ui.fragment;
 
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,7 +28,6 @@ import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.bean.Value;
 import com.fongmi.android.tv.databinding.FragmentVodBinding;
 import com.fongmi.android.tv.event.CastEvent;
-import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.event.RevealEvent;
 import com.fongmi.android.tv.event.StateEvent;
@@ -43,21 +41,14 @@ import com.fongmi.android.tv.ui.activity.SearchActivity;
 import com.fongmi.android.tv.ui.adapter.TypeAdapter;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.FilterDialog;
-import com.fongmi.android.tv.ui.dialog.HistoryDialog;
 import com.fongmi.android.tv.ui.dialog.LinkDialog;
 import com.fongmi.android.tv.ui.dialog.ReceiveDialog;
-import com.fongmi.android.tv.ui.dialog.SiteDialog;
-import com.fongmi.android.tv.utils.ImgUtil;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 public class VodFragment extends BaseFragment implements ConfigListener, SiteListener, FilterListener, TypeAdapter.OnClickListener {
 
@@ -75,6 +66,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private float appBarSlidePx;
     // 当前选中的分类页签位置（用于滑动指示器）。
     private int mTypePosition;
+    // 指示器平移动画（切换页签时播放；每帧实时追踪目标位置，避免被 tab 条自身滚动打断）。
+    private ValueAnimator mIndicatorAnim;
 
     public static VodFragment newInstance() {
         return new VodFragment();
@@ -88,10 +81,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         return VodConfig.get().getHome();
     }
 
-    private Config getConfig() {
-        return VodConfig.get().getConfig();
-    }
-
     @Override
     protected ViewBinding getBinding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
         return mBinding = FragmentVodBinding.inflate(inflater, container, false);
@@ -100,14 +89,11 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     @Override
     protected void initView() {
         EventBus.getDefault().register(this);
-        mBinding.title.setSelected(true);
         setRecyclerView();
         setViewModel();
         initFabEnter();
         initAppBarEnter();
         showProgress();
-        setTitle();
-        setLogo();
     }
 
     /** 按钮初始置于屏幕右边框之外、透明，等待入场动画。 */
@@ -129,18 +115,10 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     @Override
     protected void initEvent() {
         mBinding.top.setOnClickListener(this::onTop);
-        mBinding.logo.setOnClickListener(this::onLogo);
         mBinding.link.setOnClickListener(this::onLink);
-        mBinding.title.setOnClickListener(this::onSite);
         mBinding.filter.setOnClickListener(this::onFilter);
         mBinding.filter.setOnLongClickListener(this::onLink);
         mBinding.toolbar.setOnMenuItemClickListener(this::onMenuItemClick);
-        mBinding.appBar.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
-            float factor = Math.abs(verticalOffset * 1f / appBarLayout.getTotalScrollRange());
-            int padding = (int) (ResUtil.dp2px(12) * factor);
-            if (mBinding.type.getPaddingTop() == padding) return;
-            mBinding.type.setPadding(mBinding.type.getPaddingStart(), padding, mBinding.type.getPaddingEnd(), mBinding.type.getPaddingBottom());
-        });
         mBinding.pager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
@@ -163,10 +141,15 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mBinding.type.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                // 平移动画运行中由动画逐帧追踪目标，不能瞬时贴附，否则会 cancel 动画导致"没有动画"。
+                if (mIndicatorAnim != null && mIndicatorAnim.isRunning()) return;
                 updateTypeIndicator(false);
             }
         });
-        mBinding.type.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> updateTypeIndicator(false));
+        mBinding.type.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            if (mIndicatorAnim != null && mIndicatorAnim.isRunning()) return;
+            updateTypeIndicator(false);
+        });
     }
 
     private void setViewModel() {
@@ -187,51 +170,51 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
 
     /**
      * 顶部分类页签的滑动指示器：把胶囊背景平滑移动/缩放到当前选中页签的位置与尺寸。
+     * 动画每帧实时读取目标页签的位置（tab 条自身可能正在 smoothScroll），从旧位置插值到最新位置，
+     * 因此不会再被 onScrolled 的瞬时贴附取消。
      *
-     * @param animate true=切换页签时带动画；false=滚动/布局变化时实时跟随（无动画）。
+     * @param animate true=切换页签时带动画；false=手指拖动 tab 条等场景实时跟随（无动画）。
      */
     private void updateTypeIndicator(boolean animate) {
         if (mBinding == null) return;
         RecyclerView rv = mBinding.type;
         RecyclerView.LayoutManager lm = rv.getLayoutManager();
         if (!(lm instanceof LinearLayoutManager)) return;
-        View target = ((LinearLayoutManager) lm).findViewByPosition(mTypePosition);
+        LinearLayoutManager llm = (LinearLayoutManager) lm;
+        View target = llm.findViewByPosition(mTypePosition);
         if (target == null || target.getWidth() == 0) return;
-        View indicator = mBinding.typeIndicator;
-        int left = target.getLeft();
-        int top = target.getTop();
-        int width = target.getWidth();
-        int height = target.getHeight();
-        ViewGroup.LayoutParams lp = indicator.getLayoutParams();
-        indicator.animate().cancel();
+        final View indicator = mBinding.typeIndicator;
         if (indicator.getVisibility() != View.VISIBLE) indicator.setVisibility(View.VISIBLE);
+        final ViewGroup.LayoutParams lp = indicator.getLayoutParams();
+        // 先缓存动画起点（旧位置/旧尺寸），再启动动画，避免读到变化后的值导致 delta 为 0。
+        final float startX = indicator.getTranslationX();
+        final float startY = indicator.getTranslationY();
+        final int startW = lp.width > 0 ? lp.width : target.getWidth();
+        final int startH = lp.height > 0 ? lp.height : target.getHeight();
+        if (mIndicatorAnim != null) mIndicatorAnim.cancel();
         if (!animate) {
-            if (lp.width != width || lp.height != height) {
-                lp.width = width;
-                lp.height = height;
-                indicator.setLayoutParams(lp);
-            }
-            indicator.setTranslationX(left);
-            indicator.setTranslationY(top);
+            lp.width = target.getWidth();
+            lp.height = target.getHeight();
+            indicator.setLayoutParams(lp);
+            indicator.setTranslationX(target.getLeft());
+            indicator.setTranslationY(target.getTop());
             return;
         }
-        int fromWidth = lp.width > 0 ? lp.width : width;
-        indicator.animate()
-                .translationX(left)
-                .translationY(top)
-                .setDuration(280)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .start();
-        if (fromWidth != width) {
-            ValueAnimator widthAnim = ValueAnimator.ofInt(fromWidth, width);
-            widthAnim.addUpdateListener(a -> {
-                lp.width = (int) a.getAnimatedValue();
-                indicator.setLayoutParams(lp);
-            });
-            widthAnim.setDuration(280);
-            widthAnim.setInterpolator(new AccelerateDecelerateInterpolator());
-            widthAnim.start();
-        }
+        mIndicatorAnim = ValueAnimator.ofFloat(0f, 1f);
+        mIndicatorAnim.setDuration(280);
+        mIndicatorAnim.setInterpolator(new AccelerateDecelerateInterpolator());
+        mIndicatorAnim.addUpdateListener(a -> {
+            View t = llm.findViewByPosition(mTypePosition);
+            if (t == null || t.getWidth() == 0) return;
+            float f = a.getAnimatedFraction();
+            indicator.setTranslationX(startX + (t.getLeft() - startX) * f);
+            indicator.setTranslationY(startY + (t.getTop() - startY) * f);
+            ViewGroup.LayoutParams p = indicator.getLayoutParams();
+            p.width = Math.round(startW + (t.getWidth() - startW) * f);
+            p.height = Math.round(startH + (t.getHeight() - startH) * f);
+            indicator.setLayoutParams(p);
+        });
+        mIndicatorAnim.start();
     }
 
     /** 应用加载完成后，右下角按钮从屏幕右边框之外带回弹地滑入原位（与底栏 reveal 同时机）。 */
@@ -244,13 +227,13 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             if (v.getVisibility() == View.VISIBLE) {
                 v.setTranslationX(fabSlidePx);
                 v.setAlpha(0f);
-                // 非线性 + 小幅回弹：tension 1.25 过冲量收小（幅度收敛），800ms 偏慢，错开 90ms 错落。
+                // 非线性 + 极小幅回弹：tension 0.9 过冲量进一步收小，1050ms 偏慢，错开 110ms 错落。
                 v.animate()
                         .translationX(0f)
                         .alpha(1f)
-                        .setInterpolator(new OvershootInterpolator(1.25f))
-                        .setStartDelay(index * 90L)
-                        .setDuration(800)
+                        .setInterpolator(new OvershootInterpolator(0.9f))
+                        .setStartDelay(index * 110L)
+                        .setDuration(1050)
                         .start();
                 index++;
             } else {
@@ -261,7 +244,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         }
     }
 
-    /** 顶栏从屏幕上边框之外带回弹地滑入并淡入（与底栏 reveal 同时机，幅度收敛）。 */
+    /** 顶栏从屏幕上边框之外带回弹地滑入并淡入（与底栏 reveal 同时机，参数同底栏/圆钮一致）。 */
     private void revealAppBar() {
         if (appBarEntered || mBinding == null) return;
         appBarEntered = true;
@@ -271,8 +254,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         bar.animate()
                 .translationY(0f)
                 .alpha(1f)
-                .setInterpolator(new OvershootInterpolator(1.2f))
-                .setDuration(800)
+                .setInterpolator(new OvershootInterpolator(0.9f))
+                .setDuration(1050)
                 .start();
     }
 
@@ -298,12 +281,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         }
     }
 
-    private void setTitle() {
-        List<String> items = Arrays.asList(getHome().getName(), getConfig().getName(), getString(R.string.app_name));
-        Optional<String> optional = items.stream().filter(s -> !TextUtils.isEmpty(s)).findFirst();
-        optional.ifPresent(s -> mBinding.title.setText(s));
-    }
-
     private void onTop(View view) {
         getFragment().scrollToTop();
         mBinding.top.setVisibility(View.INVISIBLE);
@@ -314,14 +291,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private boolean onLink(View view) {
         LinkDialog.show(this);
         return true;
-    }
-
-    private void onLogo(View view) {
-        HistoryDialog.create().vod().readOnly().show(this);
-    }
-
-    private void onSite(View view) {
-        SiteDialog.create().change().show(this);
     }
 
     private void onFilter(View view) {
@@ -364,20 +333,10 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         return mResult == null ? new Result() : mResult;
     }
 
-    private void setLogo() {
-        ImgUtil.logo(mBinding.logo);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onConfigEvent(ConfigEvent event) {
-        if (event.type() == ConfigEvent.Type.VOD) setLogo();
-    }
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRefreshEvent(RefreshEvent event) {
         switch (event.getType()) {
             case HOME:
-                setTitle();
             case SIZE:
                 homeContent();
                 break;
@@ -411,8 +370,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             public void start() {
                 showProgress();
                 hideContent();
-                setTitle();
-                setLogo();
             }
 
             @Override
@@ -453,6 +410,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (mIndicatorAnim != null) mIndicatorAnim.cancel();
         EventBus.getDefault().unregister(this);
     }
 

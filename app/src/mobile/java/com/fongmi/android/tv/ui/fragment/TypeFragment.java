@@ -112,7 +112,21 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
     private void setRecyclerView() {
         mBinding.recycler.setTranslationY(-ResUtil.dp2px(getY()));
         mBinding.recycler.setHasFixedSize(true);
+        applyHomeBarInset();
         setStyle(getStyle());
+    }
+
+    /**
+     * 首页点播页内容铺到渐变顶栏之下：paddingTop 让出顶栏高度（工具栏 ?attr/actionBarSize ≈ 56dp），
+     * 配合 recycler 的 clipToPadding=false，滚动时内容从渐变栏下穿过；下拉刷新圈同步下移避免被栏遮挡。
+     * 仅当挂在首页 VodFragment 下时生效（FolderActivity 无此顶栏）。
+     */
+    private void applyHomeBarInset() {
+        var parent = getParentFragment();
+        if (parent == null || !(parent.getParentFragment() instanceof VodFragment)) return;
+        int top = ResUtil.dp2px(56);
+        mBinding.recycler.setPaddingRelative(mBinding.recycler.getPaddingStart(), top, mBinding.recycler.getPaddingEnd(), mBinding.recycler.getPaddingBottom());
+        mBinding.swipeLayout.setProgressViewOffset(false, top, top + ResUtil.dp2px(72));
     }
 
     private void setStyle(Style style) {

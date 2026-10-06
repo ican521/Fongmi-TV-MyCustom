@@ -6,6 +6,7 @@ import android.widget.FrameLayout
 import androidx.annotation.IdRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -165,11 +166,15 @@ class CapsuleBottomBar @JvmOverloads constructor(
         // 位移距离 = 胶囊高度(64dp) + 底部外边距(20dp) + 小幅余量，行程适中。
         val slideDistancePx = with(density) { 92.dp.toPx() }
         val shouldReveal = revealRequested.value
+        // 与顶栏/右下角圆钮一致的入场曲线：固定 1050ms、Overshoot tension 0.9（小幅过冲回弹）。
+        val overshootEasing = Easing { f ->
+            val t = f - 1.0f
+            t * t * ((0.9f + 1) * t + 0.9f) + 1.0f
+        }
         LaunchedEffect(shouldReveal) {
             if (shouldReveal) {
-                // 非线性 + 小幅回弹：dampingRatio 0.62 → 过冲量小（幅度收敛），stiffness 260 节奏偏慢。
-                launch { slide.animateTo(0f, spring(dampingRatio = 0.62f, stiffness = 260f)) }
-                launch { barAlpha.animateTo(1f, tween(durationMillis = 500)) }
+                launch { slide.animateTo(0f, tween(durationMillis = 1050, easing = overshootEasing)) }
+                launch { barAlpha.animateTo(1f, tween(durationMillis = 1050)) }
             }
         }
 
@@ -233,13 +238,13 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     .width(280.dp)
                     .fillMaxHeight(),
             ) {
-            // 毛玻璃背景层：实时模糊背后内容 + 半透明深色蒙版，裁成胶囊形。
+            // 纯色背景层：RGB 36,36,36（#242424）不透明，裁成胶囊形。
             // 作为最底层绘制，图标文字与指示器在其之上。
-            AndroidView(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(pill),
-                factory = { ctx -> BlurBackdrop(ctx) },
+                    .clip(pill)
+                    .background(Color(0xFF242424)),
             )
             Row(
                 modifier = Modifier

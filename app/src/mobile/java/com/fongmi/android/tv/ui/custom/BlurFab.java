@@ -2,8 +2,11 @@ package com.fongmi.android.tv.ui.custom;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
@@ -15,12 +18,12 @@ import androidx.core.content.ContextCompat;
 import com.fongmi.android.tv.R;
 
 /**
- * 圆形毛玻璃按钮：底层为 {@link BlurBackdrop}（实时模糊背后内容 + 半透明深色蒙版，参数与底栏一致），
+ * 圆形纯色按钮：底层为纯色圆形背景（#242424 不透明，与胶囊底栏一致），
  * 上层为图标，按下时图标层叠加深色反馈。对外行为与普通 View 一致（setVisibility / setOnClickListener / getTag 等）。
  */
 public class BlurFab extends FrameLayout {
 
-    private final BlurBackdrop mBlur;
+    private final View mBg;
     private final AppCompatImageView mIcon;
 
     public BlurFab(@NonNull Context context) {
@@ -34,12 +37,14 @@ public class BlurFab extends FrameLayout {
     public BlurFab(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        // 底层：毛玻璃（BlurBackdrop 会按自身尺寸裁剪，正方形 + 半径=高/2 即正圆）。
-        mBlur = new BlurBackdrop(context);
-        // 模糊背后的点播列表 pager（与按钮为兄弟节点，不含按钮自身，避免递归）。
-        mBlur.setPreferredTargetId(R.id.pager);
-        LayoutParams blurLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-        addView(mBlur, blurLp);
+        // 底层：纯色圆形背景（#242424 不透明，与胶囊底栏同色同风格）。
+        mBg = new View(context);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setShape(GradientDrawable.OVAL);
+        bg.setColor(Color.rgb(36, 36, 36));
+        mBg.setBackground(bg);
+        LayoutParams bgLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        addView(mBg, bgLp);
 
         // 上层：图标。padding 16dp，按下时背景加深。
         mIcon = new AppCompatImageView(context);
@@ -74,6 +79,5 @@ public class BlurFab extends FrameLayout {
     @Override
     public void setVisibility(int visibility) {
         super.setVisibility(visibility);
-        // 隐藏时停止底层模糊的绘制开销（BlurBackdrop 自身 onDraw 会判断 isShown）。
     }
 }

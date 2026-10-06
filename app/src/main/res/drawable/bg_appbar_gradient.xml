@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 顶部 tab 栏背景：纯黑 → 透明 的纵向渐变（270° = 从上往下），越向下越透明，与纯黑窗口背景无缝衔接。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#FF000000"
+        android:centerColor="#B3000000"
+        android:endColor="#00000000"
+        android:type="linear" />
+</shape>

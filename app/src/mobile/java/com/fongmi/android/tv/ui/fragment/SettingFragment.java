@@ -1,11 +1,20 @@
 package com.fongmi.android.tv.ui.fragment;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.viewbinding.ViewBinding;
 
 import com.fongmi.android.tv.BuildConfig;
@@ -36,7 +45,7 @@ import com.fongmi.android.tv.utils.PermissionUtil;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.github.catvod.bean.Doh;
 import com.github.catvod.net.OkHttp;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textview.MaterialTextView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -73,10 +82,31 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     protected void initView() {
         EventBus.getDefault().register(this);
         mBinding.vodUrl.setText(VodConfig.getDesc());
-        mBinding.wallUrl.setText(WallConfig.getDesc());
         mBinding.versionText.setText(BuildConfig.VERSION_NAME);
+        setRowPressBackground(mBinding.sizeRow, true, false);
+        setRowPressBackground(mBinding.dohRow, false, true);
         setOtherText();
         setCacheText();
+    }
+
+    /**
+     * 合并卡片内各行的按压覆盖层：圆角跟随卡片（上一行顶部圆角、下一行底部圆角），
+     * 避免矩形按压层超出 14dp 卡片圆角。
+     */
+    private void setRowPressBackground(View row, boolean topRound, boolean bottomRound) {
+        float r = ResUtil.dp2px(14);
+        GradientDrawable pressed = new GradientDrawable();
+        pressed.setColor(ResUtil.getColor(R.color.press_overlay));
+        pressed.setCornerRadii(new float[]{
+                topRound ? r : 0, topRound ? r : 0,
+                topRound ? r : 0, topRound ? r : 0,
+                bottomRound ? r : 0, bottomRound ? r : 0,
+                bottomRound ? r : 0, bottomRound ? r : 0
+        });
+        StateListDrawable background = new StateListDrawable();
+        background.addState(new int[]{android.R.attr.state_pressed}, pressed);
+        background.addState(new int[]{}, new ColorDrawable(Color.TRANSPARENT));
+        row.setBackground(background);
     }
 
     private void setOtherText() {
@@ -97,9 +127,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     @Override
     protected void initEvent() {
         mBinding.vod.setOnClickListener(this::onVod);
-        mBinding.doh.setOnClickListener(this::setDoh);
         mBinding.wall.setOnClickListener(this::onWall);
-        mBinding.size.setOnClickListener(this::setSize);
         mBinding.cache.setOnClickListener(this::onCache);
         mBinding.backup.setOnClickListener(this::onBackup);
         mBinding.player.setOnClickListener(this::onPlayer);
@@ -110,9 +138,8 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         mBinding.wall.setOnLongClickListener(this::onWallEdit);
         mBinding.incognito.setOnClickListener(this::setIncognito);
         mBinding.vodHistory.setOnClickListener(this::onVodHistory);
-        mBinding.wallDefault.setOnClickListener(this::setWallDefault);
-        mBinding.wallRefresh.setOnClickListener(this::setWallRefresh);
-        mBinding.wallRefresh.setOnLongClickListener(this::onWallHistory);
+        mBinding.sizeRow.setOnClickListener(v -> showSizeMenu());
+        mBinding.dohRow.setOnClickListener(v -> showDohMenu());
     }
 
     @Override
@@ -196,41 +223,100 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         Updater.create().force().start(requireActivity());
     }
 
-    private void setWallDefault(View view) {
-        Setting.putWall(Setting.getWall() == 4 ? 1 : Setting.getWall() + 1);
-        Setting.putWallType(0);
-        ConfigEvent.wall();
-    }
-
-    private void setWallRefresh(View view) {
-        Setting.putWall(0);
-        WallConfig.get().load(getCallback());
-    }
-
-    private boolean onWallHistory(View view) {
-        HistoryDialog.create().wall().show(this);
-        return true;
-    }
-
     private void setIncognito(View view) {
         Setting.putIncognito(!Setting.isIncognito());
         mBinding.incognitoSwitch.setChecked(Setting.isIncognito());
     }
 
-    private void setSize(View view) {
-        new MaterialAlertDialogBuilder(requireActivity()).setTitle(R.string.setting_size).setNegativeButton(R.string.dialog_negative, null).setSingleChoiceItems(size, PlayerSetting.getSize(), (dialog, which) -> {
-            mBinding.sizeText.setText(size[which]);
-            PlayerSetting.putSize(which);
+    private void showSizeMenu() {
+        showOptionMenu(mBinding.sizeToggle, size, PlayerSetting.getSize(), index -> {
+            PlayerSetting.putSize(index);
+            mBinding.sizeText.setText(size[index]);
             RefreshEvent.size();
-            dialog.dismiss();
-        }).show();
+        });
     }
 
-    private void setDoh(View view) {
-        new MaterialAlertDialogBuilder(requireActivity()).setTitle(R.string.setting_doh).setNegativeButton(R.string.dialog_negative, null).setSingleChoiceItems(getDohList(), getDohIndex(), (dialog, which) -> {
-            setDoh(VodConfig.get().getDoh().get(which));
-            dialog.dismiss();
-        }).show();
+    private void showDohMenu() {
+        List<Doh> list = VodConfig.get().getDoh();
+        String[] items = new String[list.size()];
+        for (int i = 0; i < list.size(); i++) items[i] = list.get(i).getName();
+        showOptionMenu(mBinding.dohToggle, items, getDohIndex(), index -> setDoh(list.get(index)));
+    }
+
+    /**
+     * 照搬参考项目 SegmentedDropdownItem 的交互：点击后在箭头处弹出深色圆角菜单，
+     * 当前选项以主题主色文字 + 同色对勾标记，其余为白色文字，点外部关闭。
+     */
+    private void showOptionMenu(View anchor, String[] items, int selectedIndex, OnOptionPicked listener) {
+        TypedValue value = new TypedValue();
+        requireContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, value, true);
+        int colorPrimary = value.data;
+
+        LinearLayout container = new LinearLayout(requireContext());
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setBackgroundResource(R.drawable.shape_menu_bg);
+        int pad = ResUtil.dp2px(8);
+        container.setPadding(pad, pad, pad, pad);
+
+        for (int i = 0; i < items.length; i++) {
+            final int index = i;
+            boolean selected = i == selectedIndex;
+
+            LinearLayout row = new LinearLayout(requireContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setMinimumHeight(ResUtil.dp2px(48));
+            row.setBackgroundResource(R.drawable.shape_menu_item);
+            int padH = ResUtil.dp2px(14);
+            row.setPadding(padH, 0, padH, 0);
+
+            MaterialTextView text = new MaterialTextView(requireContext());
+            text.setText(items[i]);
+            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            text.setTextColor(selected ? colorPrimary : Color.WHITE);
+            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+            textParams.setMarginEnd(ResUtil.dp2px(20));
+            row.addView(text, textParams);
+
+            AppCompatImageView check = new AppCompatImageView(requireContext());
+            check.setImageResource(R.drawable.ic_action_check);
+            check.setColorFilter(colorPrimary);
+            check.setVisibility(selected ? View.VISIBLE : View.INVISIBLE);
+            int checkSize = ResUtil.dp2px(20);
+            row.addView(check, new LinearLayout.LayoutParams(checkSize, checkSize));
+
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            container.addView(row, rowParams);
+        }
+
+        PopupWindow popup = new PopupWindow(container, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, true);
+        popup.setElevation(ResUtil.dp2px(8));
+        popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popup.setOutsideTouchable(true);
+        popup.setAnimationStyle(android.R.style.Animation_Dialog);
+
+        for (int i = 0; i < container.getChildCount(); i++) {
+            final int index = i;
+            container.getChildAt(i).setOnClickListener(v -> {
+                popup.dismiss();
+                listener.onPicked(index);
+            });
+        }
+
+        container.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int gap = ResUtil.dp2px(4);
+        int[] location = new int[2];
+        anchor.getLocationOnScreen(location);
+        int spaceBelow = ResUtil.getScreenHeight(requireContext()) - location[1] - anchor.getHeight();
+        if (spaceBelow >= container.getMeasuredHeight() + gap) {
+            popup.showAsDropDown(anchor, 0, gap, Gravity.END);
+        } else {
+            popup.showAsDropDown(anchor, 0, -(anchor.getHeight() + container.getMeasuredHeight() + gap), Gravity.END);
+        }
+    }
+
+    private interface OnOptionPicked {
+        void onPicked(int index);
     }
 
     private void setDoh(Doh doh) {
@@ -287,7 +373,6 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     public void onConfigEvent(ConfigEvent event) {
         if (event.type() != ConfigEvent.Type.COMMON) return;
         mBinding.vodUrl.setText(VodConfig.getDesc());
-        mBinding.wallUrl.setText(WallConfig.getDesc());
     }
 
     @Override
