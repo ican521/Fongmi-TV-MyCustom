@@ -25,11 +25,14 @@
         android:clipToPadding="false"
         android:orientation="vertical">
 
-        <!-- 第一行：与“我的收藏/设置”完全一致的标题栏：左上“首页”，右侧搜索/历史菜单。 -->
+        <!-- 第一行：与“我的收藏/设置”观感一致的标题栏：左上“首页”，右侧搜索/历史菜单。
+             收藏页标题栏背后是窗口纯黑底（toolbar 自身本身透明），本页标题栏背后是会滚动的海报，
+             故显式铺与窗口背景一致的纯黑底，保证两页标题栏视觉完全相同。 -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:background="?android:windowBackground"
             app:menu="@menu/menu_vod"
             app:title="@string/home_title"
             app:titleTextAppearance="@style/ToolbarTextAppearance" />
