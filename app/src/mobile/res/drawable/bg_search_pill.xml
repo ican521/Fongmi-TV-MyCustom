@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 首页顶部胶囊搜索栏：与底栏设计语言统一——纯色 #242424（不透明）+ 白色 12% 1dp 亮边。
+     胶囊高 40dp，圆角半径 20dp = 高度的一半，两端为饱满半圆（标准完美胶囊）。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FF242424" />
+    <corners android:radius="20dp" />
+    <stroke
+        android:width="1dp"
+        android:color="#1FFFFFFF" />
+</shape>

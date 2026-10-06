@@ -25,17 +25,77 @@
         android:clipToPadding="false"
         android:orientation="vertical">
 
-        <!-- 第一行：与“我的收藏/设置”观感一致的标题栏：左上“首页”，右侧搜索/历史菜单。
-             收藏页标题栏背后是窗口纯黑底（toolbar 自身本身透明），本页标题栏背后是会滚动的海报，
-             故显式铺与窗口背景一致的纯黑底，保证两页标题栏视觉完全相同。 -->
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
+        <!-- 第一行标题栏（高 ?attr/actionBarSize，纯黑底）：
+             左“首页” → 中间胶囊搜索栏（weight=1 填满中间区域）→ 右历史按钮。
+             胶囊内右侧为搜索图标（位置与原菜单搜索钮一致），左侧为轮播热搜词。 -->
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?android:windowBackground"
-            app:menu="@menu/menu_vod"
-            app:title="@string/home_title"
-            app:titleTextAppearance="@style/ToolbarTextAppearance" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="@string/home_title"
+                android:textAppearance="@style/ToolbarTextAppearance" />
+
+            <!-- 胶囊搜索栏：高 40dp、圆角半径 20dp（=高度一半，完美胶囊），
+                 与底栏同色 #242424（不透明）+白色 12% 亮边，左右各 12dp 间距，
+                 左挨“首页”、右挨历史钮，长度填满中间整段。点击任意位置跳转搜索页。 -->
+            <FrameLayout
+                android:id="@+id/searchPill"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_search_pill"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <TextView
+                    android:id="@+id/hotWord"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="14dp"
+                    android:layout_marginEnd="46dp"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="@string/search_pill_hint"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp" />
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end|center_vertical"
+                    android:layout_marginEnd="2dp"
+                    android:contentDescription="@string/menu_search"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_action_search"
+                    app:tint="@color/white" />
+
+            </FrameLayout>
+
+            <ImageView
+                android:id="@+id/history"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/app_history"
+                android:focusable="true"
+                android:padding="12dp"
+                android:src="@drawable/ic_action_history"
+                app:tint="@color/white" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
 
         <!-- 第二行：分类页签整体下移为标题让位；整行铺满屏宽承载纯黑→透明渐变，
              tab 列表自身左右各 8dp 内边距，与下方卡片网格内容区对齐。 -->

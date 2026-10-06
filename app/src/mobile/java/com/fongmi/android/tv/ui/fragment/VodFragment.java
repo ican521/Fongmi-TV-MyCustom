@@ -1,7 +1,9 @@
 package com.fongmi.android.tv.ui.fragment;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -19,13 +21,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewpager.widget.ViewPager;
 
-import com.fongmi.android.tv.R;
+import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.api.config.VodConfig;
 import com.fongmi.android.tv.bean.Class;
 import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.bean.Value;
+import com.fongmi.android.tv.bean.Word;
 import com.fongmi.android.tv.databinding.FragmentVodBinding;
 import com.fongmi.android.tv.event.CastEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
@@ -36,6 +39,7 @@ import com.fongmi.android.tv.impl.ConfigListener;
 import com.fongmi.android.tv.impl.FilterListener;
 import com.fongmi.android.tv.impl.SiteListener;
 import com.fongmi.android.tv.model.SiteViewModel;
+import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.activity.HistoryActivity;
 import com.fongmi.android.tv.ui.activity.SearchActivity;
 import com.fongmi.android.tv.ui.adapter.TypeAdapter;
@@ -45,10 +49,19 @@ import com.fongmi.android.tv.ui.dialog.LinkDialog;
 import com.fongmi.android.tv.ui.dialog.ReceiveDialog;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
+import com.github.catvod.net.OkHttp;
+import com.google.common.net.HttpHeaders;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import okhttp3.Call;
+import okhttp3.Response;
 
 public class VodFragment extends BaseFragment implements ConfigListener, SiteListener, FilterListener, TypeAdapter.OnClickListener {
 
@@ -68,6 +81,11 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private int mTypePosition;
     // 指示器平移动画（切换页签时播放；每帧实时追踪目标位置，避免被 tab 条自身滚动打断）。
     private ValueAnimator mIndicatorAnim;
+    // 顶部胶囊搜索栏的热搜词轮播：主线程 Handler 每 15s 换一个词。
+    private final Handler mHotHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mHotTask = this::showNextHot;
+    private List<Word.Data> mHotWords = List.of();
+    private int mHotIndex;
 
     public static VodFragment newInstance() {
         return new VodFragment();
@@ -93,6 +111,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         setViewModel();
         initFabEnter();
         initAppBarEnter();
+        initHotWord();
         showProgress();
     }
 
@@ -118,7 +137,9 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mBinding.link.setOnClickListener(this::onLink);
         mBinding.filter.setOnClickListener(this::onFilter);
         mBinding.filter.setOnLongClickListener(this::onLink);
-        mBinding.toolbar.setOnMenuItemClickListener(this::onMenuItemClick);
+        // 整个搜索胶囊可点：点击任意位置（含右侧搜索图标）都跳转搜索页；历史钮独立点击。
+        mBinding.searchPill.setOnClickListener(v -> SearchActivity.start(requireActivity()));
+        mBinding.history.setOnClickListener(v -> HistoryActivity.start(requireActivity()));
         mBinding.pager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
@@ -310,10 +331,35 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         if (mAdapter.getItemCount() > 0) FilterDialog.create().filter(mAdapter.get(mBinding.pager.getCurrentItem()).getFilters()).show(this);
     }
 
-    private boolean onMenuItemClick(MenuItem item) {
-        if (item.getItemId() == R.id.search) SearchActivity.start(requireActivity());
-        else if (item.getItemId() == R.id.history) HistoryActivity.start(requireActivity());
-        return true;
+    /**
+     * 顶部胶囊热搜词：先读本地缓存（与搜索页同源 Setting.getHot）立即展示，
+     * 再异步拉取 360 影视榜单更新缓存，成功后下一轮自动用上新词。
+     */
+    private void initHotWord() {
+        mHotWords = Word.objectFrom(Setting.getHot()).getData();
+        showNextHot();
+        OkHttp.newCall("https://api.web.360kan.com/v1/rank?cat=1", Map.of(HttpHeaders.REFERER, "https://www.360kan.com/rank/general")).enqueue(new Callback() {
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String result = response.body().string();
+                if (TextUtils.isEmpty(result)) return;
+                App.post(() -> {
+                    mHotWords = Word.objectFrom(result).getData();
+                    Setting.putHot(result);
+                });
+            }
+        });
+    }
+
+    /** 展示当前热搜词并安排 15s 后切换下一个；词表为空时保留占位文案。 */
+    private void showNextHot() {
+        if (!mHotWords.isEmpty()) {
+            String title = mHotWords.get(mHotIndex % mHotWords.size()).getTitle();
+            if (!TextUtils.isEmpty(title)) mBinding.hotWord.setText(title);
+            mHotIndex++;
+        }
+        mHotHandler.removeCallbacks(mHotTask);
+        mHotHandler.postDelayed(mHotTask, 15_000);
     }
 
     private void showProgress() {
@@ -425,6 +471,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        mHotHandler.removeCallbacksAndMessages(null);
         if (mIndicatorAnim != null) mIndicatorAnim.cancel();
         EventBus.getDefault().unregister(this);
     }
