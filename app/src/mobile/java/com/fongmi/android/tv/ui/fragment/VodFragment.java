@@ -166,6 +166,11 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         revealAppBar();
         hideProgress();
         showContent();
+        // 数据刷新后 tab 需重新布局，post 到布局完成后做一次无动画校正，
+        // 保证指示器立即贴合首个 tab，不必等用户滑动 tab 触发。
+        mBinding.type.post(() -> {
+            if (mBinding != null) updateTypeIndicator(false);
+        });
     }
 
     /**
@@ -180,9 +185,15 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         RecyclerView rv = mBinding.type;
         RecyclerView.LayoutManager lm = rv.getLayoutManager();
         if (!(lm instanceof LinearLayoutManager)) return;
+        // 数据切换（notifyDataSetChanged）时 RecyclerView 可能正处于布局中，
+        // 此刻 findViewByPosition 会返回尺寸未稳定的复用/预布局 item，读出来是脏尺寸，
+        // 必须跳过，待布局结束后的 onScrolled/onLayoutChange 或 post 校正再定位。
+        if (rv.isComputingLayout() || rv.getWidth() <= 0 || rv.getHeight() <= 0) return;
         LinearLayoutManager llm = (LinearLayoutManager) lm;
         View target = llm.findViewByPosition(mTypePosition);
-        if (target == null || target.getWidth() == 0) return;
+        // 目标必须已完成布局，且尺寸不超出 tab 条本身（过滤 728x176 这类瞬态脏值）。
+        if (target == null || !target.isLaidOut() || target.getWidth() <= 0 || target.getHeight() <= 0) return;
+        if (target.getWidth() > rv.getWidth() || target.getHeight() > rv.getHeight()) return;
         final View indicator = mBinding.typeIndicator;
         if (indicator.getVisibility() != View.VISIBLE) indicator.setVisibility(View.VISIBLE);
         final ViewGroup.LayoutParams lp = indicator.getLayoutParams();
@@ -205,7 +216,9 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mIndicatorAnim.setInterpolator(new AccelerateDecelerateInterpolator());
         mIndicatorAnim.addUpdateListener(a -> {
             View t = llm.findViewByPosition(mTypePosition);
-            if (t == null || t.getWidth() == 0) return;
+            // 动画途中 tab 可能被回收/复用，同样只信任已布局且尺寸合理的目标，异常帧直接跳过。
+            if (t == null || !t.isLaidOut() || t.getWidth() <= 0 || t.getHeight() <= 0) return;
+            if (t.getWidth() > rv.getWidth() || t.getHeight() > rv.getHeight()) return;
             float f = a.getAnimatedFraction();
             indicator.setTranslationX(startX + (t.getLeft() - startX) * f);
             indicator.setTranslationY(startY + (t.getTop() - startY) * f);
@@ -325,6 +338,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         showProgress();
         setFabVisible(0);
         mAdapter.clear();
+        // 清空旧数据时隐藏指示器，避免切换配置期间残留上一个配置的错位大块。
+        mBinding.typeIndicator.setVisibility(View.INVISIBLE);
         mViewModel.homeContent();
         mBinding.pager.setAdapter(new PageAdapter(getChildFragmentManager()));
     }
