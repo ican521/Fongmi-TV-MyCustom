@@ -122,6 +122,10 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
             return insets;
         });
         mPager.setUserInputEnabled(false);
+        // 常驻全部 3 个主页：默认仅保留相邻 1 页，在设置页(index2)时点播页(index0)视图会被销毁。
+        // 若期间加载了点播配置，点回点播时平移动画途中要同步重建点播页视图、三个子 Fragment、
+        // 首轮布局并解码首批海报，表现为切页动画卡顿两下。常驻后这些工作在离屏时提前完成，切页只剩平移。
+        mPager.setOffscreenPageLimit(2);
         mPager.setAdapter(new HomePagerAdapter(getSupportFragmentManager(), getLifecycle()));
         mPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
