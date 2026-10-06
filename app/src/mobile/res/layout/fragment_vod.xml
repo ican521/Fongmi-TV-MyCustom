@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <!-- 内容区铺满整个屏幕（含顶栏之下），滚动时内容从渐变顶栏下穿过。 -->
     <com.fongmi.android.tv.ui.custom.CustomViewPager
@@ -11,54 +13,55 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- 顶栏后声明使其绘制在内容之上：背景为纯黑→透明纵向渐变，越向下越透明。 -->
+    <!-- 顶栏后声明使其绘制在内容之上：背景为纯黑→透明纵向渐变，越向下越透明。
+         运行时上移负状态栏高度并加等高顶部内边距，使渐变从屏幕最顶（状态栏后方）开始。 -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_appbar_gradient"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:elevation="0dp"
         app:elevation="0dp"
         app:liftOnScrollColor="@color/transparent">
 
+        <!-- 第一行：与“我的收藏/设置”完全一致的标题栏：左上“首页”，右侧搜索/历史菜单。 -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:menu="@menu/menu_vod">
+            app:menu="@menu/menu_vod"
+            app:title="@string/home_title"
+            app:titleTextAppearance="@style/ToolbarTextAppearance" />
 
-            <!-- 分类页签（原 logo/标题位置）：横向 tab + 滑动指示器；右侧菜单（搜索/历史）保持不变。 -->
-            <FrameLayout
-                android:layout_width="match_parent"
+        <!-- 第二行：分类页签整体下移为标题让位；左右各 8dp 边距，宽度与下方卡片网格内容区一致。 -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <View
+                android:id="@+id/type_indicator"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
+                android:background="@drawable/shape_type_indicator"
+                android:visibility="invisible" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/type"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:clipChildren="false"
-                android:clipToPadding="false">
+                android:clipToPadding="false"
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/adapter_type" />
 
-                <View
-                    android:id="@+id/type_indicator"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/shape_type_indicator"
-                    android:visibility="invisible" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/type"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clipChildren="false"
-                    android:clipToPadding="false"
-                    android:orientation="horizontal"
-                    android:paddingStart="8dp"
-                    android:paddingTop="0dp"
-                    android:paddingEnd="8dp"
-                    android:paddingBottom="0dp"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    tools:listitem="@layout/adapter_type" />
-
-            </FrameLayout>
-
-        </com.google.android.material.appbar.MaterialToolbar>
+        </FrameLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
 

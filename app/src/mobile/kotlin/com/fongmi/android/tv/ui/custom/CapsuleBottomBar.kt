@@ -238,13 +238,13 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     .width(280.dp)
                     .fillMaxHeight(),
             ) {
-            // 纯色背景层：RGB 36,36,36（#242424）不透明，裁成胶囊形。
-            // 作为最底层绘制，图标文字与指示器在其之上。
+            // 纯色背景层：RGB 36,36,36（#242424）+ 微微透明（90% 不透明度），裁成胶囊形，
+            // 既能透出少量背后内容提升层次感，又不影响视觉识别。作为最底层绘制。
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(pill)
-                    .background(Color(0xFF242424)),
+                    .background(Color(0xE6242424)),
             )
             Row(
                 modifier = Modifier
@@ -305,9 +305,8 @@ class CapsuleBottomBar @JvmOverloads constructor(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 visible.forEach { tab ->
-                    // 照搬参考：基础 tab 的图标/文字始终为 onSurface，不随选中变色；
-                    // 选中态仅由上方覆盖的指示器（accent@15%）体现。
-                    val tint = onSurface
+                    // 图标统一纯白 #FFFFFF；文字保持 onSurface，选中态由上方覆盖的指示器（accent@15%）体现。
+                    val textTint = onSurface
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -325,12 +324,12 @@ class CapsuleBottomBar @JvmOverloads constructor(
                             Icon(
                                 painter = painterResource(tab.icon),
                                 contentDescription = null,
-                                tint = tint,
+                                tint = Color.White,
                                 modifier = Modifier.size(24.dp),
                             )
                             Text(
                                 text = stringResource(tab.label),
-                                color = tint,
+                                color = textTint,
                                 fontSize = 11.sp,
                             )
                         }

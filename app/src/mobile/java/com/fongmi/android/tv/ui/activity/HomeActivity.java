@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.core.view.ViewCompat;
@@ -121,6 +122,14 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
             v.setPadding(v.getPaddingLeft(), top, v.getPaddingRight(), 0);
             return insets;
         });
+        // 允许子页面（点播页渐变顶栏）向上绘制到状态栏对应的 padding 区域，不被 ViewPager2 及其内部 RecyclerView 裁切。
+        mPager.setClipChildren(false);
+        mPager.setClipToPadding(false);
+        ViewGroup inner = (ViewGroup) mPager.getChildAt(0);
+        if (inner != null) {
+            inner.setClipChildren(false);
+            inner.setClipToPadding(false);
+        }
         mPager.setUserInputEnabled(false);
         // 常驻全部 3 个主页：默认仅保留相邻 1 页，在设置页(index2)时点播页(index0)视图会被销毁。
         // 若期间加载了点播配置，点回点播时平移动画途中要同步重建点播页视图、三个子 Fragment、

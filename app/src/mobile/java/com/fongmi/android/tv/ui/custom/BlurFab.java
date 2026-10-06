@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat;
 import com.fongmi.android.tv.R;
 
 /**
- * 圆形纯色按钮：底层为纯色圆形背景（#242424 不透明，与胶囊底栏一致），
+ * 圆形纯色按钮：底层为纯色圆形背景（#242424，90% 不透明度微微透明，与胶囊底栏一致），
  * 上层为图标，按下时图标层叠加深色反馈。对外行为与普通 View 一致（setVisibility / setOnClickListener / getTag 等）。
  */
 public class BlurFab extends FrameLayout {
@@ -37,11 +37,11 @@ public class BlurFab extends FrameLayout {
     public BlurFab(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        // 底层：纯色圆形背景（#242424 不透明，与胶囊底栏同色同风格）。
+        // 底层：纯色圆形背景（#242424，90% 不透明度微微透明，与胶囊底栏同色同风格）。
         mBg = new View(context);
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.OVAL);
-        bg.setColor(Color.rgb(36, 36, 36));
+        bg.setColor(Color.argb(230, 36, 36, 36));
         mBg.setBackground(bg);
         LayoutParams bgLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         addView(mBg, bgLp);
