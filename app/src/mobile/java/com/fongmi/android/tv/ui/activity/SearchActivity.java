@@ -23,8 +23,8 @@ public class SearchActivity extends BaseActivity {
 
     /**
      * @param autoFinish true 表示本次搜索只是点播/收藏进入详情前的“中转”：
-     *                   从搜索结果进入影片或文件夹后，搜索页自动移出返回栈，
-     *                   使用户从详情页一次返回即可回到原页面，而不是先落回搜索页。
+     *                   搜索结果页返回时直接关闭搜索页回到原页面（不回退到搜索输入页），
+     *                   从结果进入影片或文件夹后搜索页同样自动移出返回栈。
      */
     public static void start(Activity activity, String keyword, boolean autoFinish) {
         Intent intent = new Intent(activity, SearchActivity.class);
@@ -55,6 +55,12 @@ public class SearchActivity extends BaseActivity {
 
     @Override
     protected void onBackInvoked() {
+        // 点播/收藏借道搜索的“中转”场景：结果页返回直接关闭搜索页，
+        // 不再回退到 Fragment 栈底的搜索输入页，保证一次返回即回到点播页。
+        if (isAutoFinish()) {
+            super.onBackInvoked();
+            return;
+        }
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             getSupportFragmentManager().popBackStack();
         } else {
