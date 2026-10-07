@@ -46,8 +46,8 @@
 
     <style name="ToolbarTextAppearance" parent="TextAppearance.Material3.TitleLarge">
         <item name="android:textSize">20sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="titleTextColor">@color/white</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="titleTextColor">?attr/colorOnSurface</item>
     </style>
 
 </resources>
