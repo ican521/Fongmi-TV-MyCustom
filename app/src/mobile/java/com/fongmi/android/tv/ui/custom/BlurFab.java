@@ -32,6 +32,9 @@ public class BlurFab extends FrameLayout {
     private static final long RELEASE_DURATION = 220L;
     private long mPressedAt;
 
+    /** 回弹动画入口：postDelayed 延迟调度，避免打断未播完的按下动画。 */
+    private final Runnable mRelease = this::startRelease;
+
     public BlurFab(@NonNull Context context) {
         this(context, null);
     }
@@ -94,36 +97,48 @@ public class BlurFab extends FrameLayout {
 
     /**
      * 按压双重特效，由系统 pressed 状态驱动（与缩放同源，确定性生效）：
-     * 变亮——按压覆盖层 alpha 0→1（120ms），松开 1→0（220ms）；
-     * 缩放——整个按钮 1→0.88（120ms），松开 0.88→1（220ms）。
-     * 快速单击时按下动画未播完即松手：回弹延迟到按下动画播完再启动，
-     * 保证单击也有完整的「按下 → 回弹」节奏，避免闪一下就消失。
+     * 变亮——按压覆盖层 alpha 0→1（120ms）；缩放——整个按钮 1→0.88（120ms）；
+     * 松开回弹均为 220ms。
+     * 快速单击时松手发生在按下动画播完前：此时绝不能启动回弹动画
+     * （animate().start() 会取消正在跑的按下动画，导致变亮未达峰值即冻结），
+     * 只 postDelayed 等按下动画自然播完后再回弹；长按则立即回弹。
      */
     @Override
     protected void drawableStateChanged() {
         super.drawableStateChanged();
-        boolean pressed = isPressed();
-        long delay = 0;
-        if (pressed) {
+        removeCallbacks(mRelease);
+        if (isPressed()) {
             mPressedAt = android.os.SystemClock.elapsedRealtime();
-        } else {
-            delay = Math.max(0, PRESS_DURATION - (android.os.SystemClock.elapsedRealtime() - mPressedAt));
+            animatePress(1f, PRESS_DURATION);
+            animateScale(0.88f, PRESS_DURATION);
+        } else if (mPressedAt > 0) {
+            long elapsed = android.os.SystemClock.elapsedRealtime() - mPressedAt;
+            if (elapsed < PRESS_DURATION) {
+                postDelayed(mRelease, PRESS_DURATION - elapsed);
+            } else {
+                mRelease.run();
+            }
         }
-        float target = pressed ? 1f : 0f;
-        if (mPress.getAlpha() != target) {
-            mPress.animate().alpha(target)
-                    .setDuration(pressed ? PRESS_DURATION : RELEASE_DURATION)
-                    .setStartDelay(delay)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
-                    .start();
-        }
-        float scale = pressed ? 0.88f : 1f;
-        if (getScaleX() != scale) {
-            animate().scaleX(scale).scaleY(scale)
-                    .setDuration(pressed ? PRESS_DURATION : RELEASE_DURATION)
-                    .setStartDelay(delay)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
-                    .start();
-        }
+    }
+
+    private void startRelease() {
+        animatePress(0f, RELEASE_DURATION);
+        animateScale(1f, RELEASE_DURATION);
+    }
+
+    private void animatePress(float target, long duration) {
+        if (mPress.getAlpha() == target) return;
+        mPress.animate().alpha(target)
+                .setDuration(duration)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+    }
+
+    private void animateScale(float target, long duration) {
+        if (getScaleX() == target) return;
+        animate().scaleX(target).scaleY(target)
+                .setDuration(duration)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
     }
 }
