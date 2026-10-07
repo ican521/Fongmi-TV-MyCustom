@@ -1,19 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 圆形按钮的按下反馈：平时完全透明（露出底层圆底），按下时叠加一层 30% 白（fab_press_overlay）
-     使深灰底明显变亮，无波纹。旧版叠加 30% 深灰（press_overlay）与底色 #242424 过于接近，
-     混色后仅 5% 亮度变化，肉眼几乎不可见，故改为白系变亮。 -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
+<!-- 圆形按钮（BlurFab）的按下变亮过渡：与卡片按压反馈同款 animated-selector 机制——
+     按下时 30% 白（fab_press_overlay）逐帧渐显（4帧×30ms=120ms，与按压缩放同步），
+     抬起时 reversible 反向逐帧渐隐。无波纹。 -->
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
 
-    <item android:state_pressed="true">
-        <shape android:shape="oval">
-            <solid android:color="@color/fab_press_overlay" />
-        </shape>
+    <item android:id="@+id/normal">
+        <aapt:attr name="android:drawable">
+            <shape android:shape="oval">
+                <solid android:color="@color/transparent" />
+            </shape>
+        </aapt:attr>
     </item>
 
-    <item>
-        <shape android:shape="oval">
-            <solid android:color="@color/transparent" />
-        </shape>
+    <item android:id="@+id/pressed" android:state_pressed="true">
+        <aapt:attr name="android:drawable">
+            <shape android:shape="oval">
+                <solid android:color="@color/fab_press_overlay" />
+            </shape>
+        </aapt:attr>
     </item>
 
-</selector>
+    <transition
+        android:fromId="@id/normal"
+        android:toId="@id/pressed"
+        android:reversible="true">
+        <animation-list android:oneshot="true">
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="oval"><solid android:color="@color/fab_press_f0" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="oval"><solid android:color="@color/fab_press_f1" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="oval"><solid android:color="@color/fab_press_f2" /></shape></aapt:attr></item>
+            <item android:duration="30"><aapt:attr name="android:drawable"><shape android:shape="oval"><solid android:color="@color/fab_press_overlay" /></shape></aapt:attr></item>
+        </animation-list>
+    </transition>
+
+</animated-selector>

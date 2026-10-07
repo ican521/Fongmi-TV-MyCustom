@@ -25,6 +25,10 @@
     <color name="press_overlay">#4D383838</color>
     <!-- 圆钮（BlurFab）专用按下变亮色：30% 白叠在深灰底上，亮度约 36→102，反馈明显。 -->
     <color name="fab_press_overlay">#4DFFFFFF</color>
+    <!-- 圆钮按压渐显过渡帧：0%→30% 白，每帧 30ms，与按压缩放 120ms 同步。 -->
+    <color name="fab_press_f0">#0DFFFFFF</color>
+    <color name="fab_press_f1">#26FFFFFF</color>
+    <color name="fab_press_f2">#3DFFFFFF</color>
     <color name="press_f0">#0D383838</color>
     <color name="press_f1">#1A383838</color>
     <color name="press_f2">#26383838</color>
