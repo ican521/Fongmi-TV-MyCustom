@@ -29,7 +29,7 @@ public class BlurFab extends FrameLayout {
     private final AppCompatImageView mIcon;
 
     private static final long PRESS_DURATION = 120L;
-    private static final long RELEASE_DURATION = 220L;
+    private static final long RELEASE_DURATION = 300L;
     private long mPressedAt;
 
     /** 回弹动画入口：postDelayed 延迟调度，避免打断未播完的按下动画。 */
@@ -98,7 +98,7 @@ public class BlurFab extends FrameLayout {
     /**
      * 按压双重特效，由系统 pressed 状态驱动（与缩放同源，确定性生效）：
      * 变亮——按压覆盖层 alpha 0→1（120ms）；缩放——整个按钮 1→0.88（120ms）；
-     * 松开回弹均为 220ms。
+     * 松开回弹均为 300ms。
      * 快速单击时松手发生在按下动画播完前：此时绝不能启动回弹动画
      * （animate().start() 会取消正在跑的按下动画，导致变亮未达峰值即冻结），
      * 只 postDelayed 等按下动画自然播完后再回弹；长按则立即回弹。
