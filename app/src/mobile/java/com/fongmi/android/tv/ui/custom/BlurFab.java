@@ -45,8 +45,11 @@ public class BlurFab extends FrameLayout {
         LayoutParams bgLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         addView(mBg, bgLp);
 
-        // 上层：图标。padding 16dp，按下时背景加深。
+        // 上层：图标。padding 16dp，按下时背景加深（变亮）。
+        // duplicateParentState：按压层在子 View 上而 pressed 状态在父容器 BlurFab 上，
+        // 必须复制父状态 selector 才能被触发（此前按压变色从未生效的根因）。
         mIcon = new AppCompatImageView(context);
+        mIcon.setDuplicateParentStateEnabled(true);
         int pad = ResUtil.dp2px(16);
         mIcon.setPadding(pad, pad, pad, pad);
         mIcon.setBackgroundResource(R.drawable.bg_fab_press);
