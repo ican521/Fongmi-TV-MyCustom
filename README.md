@@ -1,46 +1,46 @@
-# 影視TV
+# 影视TV
 
-適用於 Android TV 與手機的影音應用程式，整合媒體瀏覽與播放體驗，並支援外部配置與 [CatVod](https://github.com/CatVodTVOfficial/CatVodTVJarLoader) Spider 介面擴充。
+适用于 Android TV 与手机的影音应用，整合媒体浏览与播放体验，并支持外部配置与 [CatVod](https://github.com/CatVodTVOfficial/CatVodTVJarLoader) Spider 接口扩展。
 
-**App 本身不內建或提供任何內容來源。** 外部內容需自行配置，也可開啟本地媒體檔案或推送媒體網址。
+**App 本身不内置或提供任何内容来源。** 外部内容需自行配置，也可打开本地媒体文件或推送媒体网址。
 
-[使用與開發指南](https://fongmi.github.io/TV/) · [討論群組](https://t.me/fongmi_official)
+[使用与开发指南](https://fongmi.github.io/TV/) · [讨论群组](https://t.me/fongmi_official)
 
-## 開始使用
+## 开始使用
 
-1. 安裝適合裝置的 APK：`leanback` 為電視版，`mobile` 為手機版；依 Android 系統支援的 ABI 選擇 `arm64-v8a` 或 `armeabi-v7a`。最低需求為 Android 7.0（API 24）。
-2. 在設定中加入自己的配置，格式與欄位見[配置範例](https://fongmi.github.io/TV/config/#examples)。
-3. 也可從系統檔案管理員開啟媒體檔案，或透過推送入口播放媒體網址。
+1. 安装适合设备的 APK：`leanback` 为电视版，`mobile` 为手机版；按 Android 系统支持的 ABI 选择 `arm64-v8a` 或 `armeabi-v7a`。最低要求为 Android 7.0（API 24）。
+2. 在设置中添加自己的配置，格式与字段见[配置示例](https://fongmi.github.io/TV/config/#examples)。
+3. 也可从系统文件管理器打开媒体文件，或通过推送入口播放媒体网址。
 
 ## 主要功能
 
-- **播放**：Media3／ExoPlayer、mpv、硬解與 FFmpeg 軟解；字幕、彈幕、音軌、倍速與片頭／片尾跳過。
-- **瀏覽與管理**：分類篩選、搜尋、播放記錄、收藏與無痕模式。
-- **播放清單**：M3U／TXT／JSON 格式、清單分組與 XMLTV 節目資訊。
-- **操作**：電視遙控器、手機手勢、畫中畫與背景音訊。
-- **互通**：DLNA 投放／接收、Android Auto、本地 HTTP 控制與裝置同步。
+- **播放**：Media3／ExoPlayer、mpv、硬解与 FFmpeg 软解；字幕、弹幕、音轨、倍速与片头／片尾跳过。
+- **浏览与管理**：分类筛选、搜索、播放记录、收藏与无痕模式。
+- **播放列表**：M3U／TXT／JSON 格式、列表分组与 XMLTV 节目信息。
+- **操作**：电视遥控器、手机手势、画中画与后台音频。
+- **互联互通**：DLNA 投放／接收、Android Auto、本地 HTTP 控制与设备同步。
 
-實際能力依配置、媒體、播放引擎與裝置而異；本地 HTTP API 僅供可信任區域網路使用，不要直接轉發到公網。
+实际能力因配置、媒体、播放引擎与设备而异；本地 HTTP API 仅供可信的局域网使用，不要直接转发到公网。
 
-## 開發文件
+## 开发文档
 
-| 文件 | 內容 |
+| 文档 | 内容 |
 | --- | --- |
-| [App 功能](https://fongmi.github.io/TV/features/) | 操作與功能介紹 |
-| [配置字典](https://fongmi.github.io/TV/config/) | 配置欄位、網路設定與 JSON 範例 |
-| [擴充介接](https://fongmi.github.io/TV/spider/) | Java／Python／JavaScript 範例、方法與回傳格式 |
-| [本地 API](https://fongmi.github.io/TV/local/) | 播放控制、推送、檔案與同步端點 |
-| [網站維護](website/README.md) | 靜態網站建置與 GitHub Pages 發布 |
+| [App 功能](https://fongmi.github.io/TV/features/) | 操作与功能介绍 |
+| [配置字典](https://fongmi.github.io/TV/config/) | 配置字段、网络设置与 JSON 示例 |
+| [扩展对接](https://fongmi.github.io/TV/spider/) | Java／Python／JavaScript 示例、方法与返回格式 |
+| [本地 API](https://fongmi.github.io/TV/local/) | 播放控制、推送、文件与同步端点 |
+| [网站维护](website/README.md) | 静态网站构建与 GitHub Pages 发布 |
 
-`app/src/main/` 為共用邏輯，`app/src/leanback/`、`app/src/mobile/` 為各自的 UI。模組清單見 [settings.gradle](settings.gradle)，SDK 與依賴版本見 [libs.versions.toml](gradle/libs.versions.toml)。
+`app/src/main/` 为共用逻辑，`app/src/leanback/`、`app/src/mobile/` 为各自的 UI。模块清单见 [settings.gradle](settings.gradle)，SDK 与依赖版本见 [libs.versions.toml](gradle/libs.versions.toml)。
 
-## Windows 建置
+## Windows 构建
 
-先準備以下環境與檔案：
+先准备以下环境与文件：
 
-- **JDK 21、Android SDK、Python 3.10**。SDK 平台版本依 `compileSdk` 設定；Python 可用 `py -3.10 --version` 確認，找不到時在 [chaquo/build.gradle](chaquo/build.gradle) 的 Python 區塊設定 `buildPython`。
-- **配套 AAR**：放入 `app/libs/`。`lib-*.aar` 未納入 Git，單純 clone 不包含完整播放器依賴。
-- **自己的簽章檔與 `local.properties`**：在儲存庫根目錄建立下列設定，將所有範例值替換成自己的資料。
+- **JDK 21、Android SDK、Python 3.10**。SDK 平台版本按 `compileSdk` 设置；Python 可用 `py -3.10 --version` 确认，找不到时在 [chaquo/build.gradle](chaquo/build.gradle) 的 Python 区块设置 `buildPython`。
+- **配套 AAR**：放入 `app/libs/`。`lib-*.aar` 未纳入 Git，仅 clone 不包含完整的播放器依赖。
+- **自己的签名文件与 `local.properties`**：在仓库根目录创建如下配置，将所有示例值替换成自己的信息。
 
 ```properties
 sdk.dir=C:/Android/Sdk
@@ -49,19 +49,19 @@ keyAlias=your-key-alias
 storePassword=your-keystore-password
 ```
 
-金鑰密碼與 keystore 密碼共用 `storePassword`；不要提交簽章檔或真實密碼。
+密钥密码与 keystore 密码共用 `storePassword`；不要提交签名文件或真实密码。
 
-在儲存庫根目錄以 PowerShell 執行：
+在仓库根目录用 PowerShell 运行：
 
 ```powershell
-# 電視版
+# 电视版
 .\gradlew.bat :app:assembleLeanbackRelease
 
-# 手機版
+# 手机版
 .\gradlew.bat :app:assembleMobileRelease
 ```
 
-APK 按 ABI 分包並輸出至 `Release/apk/`。簽章不同的 APK 不能直接覆蓋既有安裝。網站位於 `website/`，可獨立建置，不需編譯 Android App。
+APK 按 ABI 分包并输出到 `Release/apk/`。签名不同的 APK 不能直接覆盖已有安装。网站位于 `website/`，可独立构建，无需编译 Android App。
 
 ## Star History
 
