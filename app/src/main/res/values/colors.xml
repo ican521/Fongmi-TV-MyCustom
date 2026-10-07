@@ -23,8 +23,8 @@
 
     <!-- 按压高亮：30% 透明 #383838（RGB 56,56,56，用于点击特效覆盖层，渐显渐隐） -->
     <color name="press_overlay">#4D383838</color>
-    <!-- 圆钮（BlurFab）按压变亮覆盖层：20% 白叠在深灰底上，亮度约 36→80，反馈适中不刺眼。 -->
-    <color name="fab_press_overlay">#33FFFFFF</color>
+    <!-- 圆钮（BlurFab）按压变亮覆盖层：11% 白叠在深灰底上，峰值亮度约 36→60。 -->
+    <color name="fab_press_overlay">#1CFFFFFF</color>
     <color name="press_f0">#0D383838</color>
     <color name="press_f1">#1A383838</color>
     <color name="press_f2">#26383838</color>
