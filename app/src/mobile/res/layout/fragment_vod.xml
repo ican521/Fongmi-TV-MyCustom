@@ -47,14 +47,15 @@
 
             <!-- 胶囊搜索栏：高 40dp、圆角半径 20dp（=高度一半，完美胶囊），
                  与底栏同色 #242424（不透明）+白色 12% 亮边，
-                 左挨“首页”（marginStart 12dp）、右挨历史钮（marginEnd 0，
-                 视觉间隙由历史按钮 12dp 内边距提供，两侧间隙均为 12dp 对称），
+                 两侧 margin 12dp：左到“首页”文字、右到历史圆钮边缘各 12dp 对称。
+                 左占位 16+40+12 = 右占位 12+40+16 = 68dp → 胶囊精确居中，
                  长度填满中间整段。点击任意位置跳转搜索页。 -->
             <FrameLayout
                 android:id="@+id/searchPill"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_search_pill"
                 android:clickable="true"
