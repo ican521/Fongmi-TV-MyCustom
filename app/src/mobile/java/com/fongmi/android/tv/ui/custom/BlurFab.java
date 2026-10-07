@@ -28,6 +28,10 @@ public class BlurFab extends FrameLayout {
     private final View mPress;
     private final AppCompatImageView mIcon;
 
+    private static final long PRESS_DURATION = 120L;
+    private static final long RELEASE_DURATION = 220L;
+    private long mPressedAt;
+
     public BlurFab(@NonNull Context context) {
         this(context, null);
     }
@@ -92,22 +96,32 @@ public class BlurFab extends FrameLayout {
      * 按压双重特效，由系统 pressed 状态驱动（与缩放同源，确定性生效）：
      * 变亮——按压覆盖层 alpha 0→1（120ms），松开 1→0（220ms）；
      * 缩放——整个按钮 1→0.88（120ms），松开 0.88→1（220ms）。
+     * 快速单击时按下动画未播完即松手：回弹延迟到按下动画播完再启动，
+     * 保证单击也有完整的「按下 → 回弹」节奏，避免闪一下就消失。
      */
     @Override
     protected void drawableStateChanged() {
         super.drawableStateChanged();
         boolean pressed = isPressed();
+        long delay = 0;
+        if (pressed) {
+            mPressedAt = android.os.SystemClock.elapsedRealtime();
+        } else {
+            delay = Math.max(0, PRESS_DURATION - (android.os.SystemClock.elapsedRealtime() - mPressedAt));
+        }
         float target = pressed ? 1f : 0f;
         if (mPress.getAlpha() != target) {
             mPress.animate().alpha(target)
-                    .setDuration(pressed ? 120L : 220L)
+                    .setDuration(pressed ? PRESS_DURATION : RELEASE_DURATION)
+                    .setStartDelay(delay)
                     .setInterpolator(new android.view.animation.DecelerateInterpolator())
                     .start();
         }
         float scale = pressed ? 0.88f : 1f;
         if (getScaleX() != scale) {
             animate().scaleX(scale).scaleY(scale)
-                    .setDuration(pressed ? 120L : 220L)
+                    .setDuration(pressed ? PRESS_DURATION : RELEASE_DURATION)
+                    .setStartDelay(delay)
                     .setInterpolator(new android.view.animation.DecelerateInterpolator())
                     .start();
         }
