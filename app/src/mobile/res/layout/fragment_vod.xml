@@ -46,14 +46,15 @@
                 android:textAppearance="@style/ToolbarTextAppearance" />
 
             <!-- 胶囊搜索栏：高 40dp、圆角半径 20dp（=高度一半，完美胶囊），
-                 与底栏同色 #242424（不透明）+白色 12% 亮边，左右各 12dp 间距，
-                 左挨“首页”、右挨历史钮，长度填满中间整段。点击任意位置跳转搜索页。 -->
+                 与底栏同色 #242424（不透明）+白色 12% 亮边，
+                 左挨“首页”（marginStart 12dp）、右挨历史钮（marginEnd 0，
+                 视觉间隙由历史按钮 12dp 内边距提供，两侧间隙均为 12dp 对称），
+                 长度填满中间整段。点击任意位置跳转搜索页。 -->
             <FrameLayout
                 android:id="@+id/searchPill"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_search_pill"
                 android:clickable="true"
