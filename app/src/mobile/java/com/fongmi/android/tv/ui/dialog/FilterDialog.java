@@ -2,7 +2,6 @@ package com.fongmi.android.tv.ui.dialog;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,13 +34,6 @@ public class FilterDialog extends BaseBottomSheetDialog {
         for (Fragment f : fragment.getChildFragmentManager().getFragments()) if (f instanceof FilterDialog) return;
         show(fragment.getChildFragmentManager(), null);
         this.listener = (FilterListener) fragment;
-    }
-
-    /** 关闭背景压暗遮罩：底部滑出时页面保持全亮，按钮按压动画不受变暗层干扰。 */
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (getDialog() != null && getDialog().getWindow() != null) getDialog().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
     }
 
     @Override
