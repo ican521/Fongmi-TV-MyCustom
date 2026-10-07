@@ -33,8 +33,11 @@ public class BlurFab extends FrameLayout {
     private static final float PRESS_SCALE = 0.88f;
     private long mPressedAt;
 
-    /** 回弹调度入口：postDelayed 延迟启动，绝不打断正在跑的按下动画（animate().start() 会取消旧动画导致峰值冻结）。 */
-    private final Runnable mRelease = () -> animatePress(0f, RELEASE_DURATION);
+    /** 回弹调度入口：postDelayed 延迟启动，绝不打断正在跑的按下动画（animate().start() 会取消旧动画导致峰值冻结）。渐隐与弹回同时启动。 */
+    private final Runnable mRelease = () -> {
+        animatePress(0f, RELEASE_DURATION);
+        animateScale(1f, RELEASE_DURATION);
+    };
 
     public BlurFab(@NonNull Context context) {
         this(context, null);
@@ -98,12 +101,11 @@ public class BlurFab extends FrameLayout {
 
     /**
      * 按压特效，由系统 pressed 状态驱动（确定性生效），变亮 + 收缩双重反馈：
-     * 变亮——覆盖层 alpha 0→1（300ms）；松开渐隐 300ms，整体呼吸一轮约 0.6 秒。
-     * 收缩——按下降至 88%（300ms 同步）；松手立即弹回 100%（300ms），随手指离开即时恢复形状，
-     * 不参与颜色的最小动画时长保护（颜色补齐期间缩放已在回弹，二者解耦互不干扰）。
-     * 最小动画时长保护（仅颜色）：快速单击松手时按下动画尚未播完，绝不立即反向——
-     * 只 postDelayed 等按下动画自然走到峰值后再渐隐，保证【渐显→峰值→渐隐】完整播放；
-     * 长按（含长按弹界面触发 CANCEL）时按下动画早已播完，松手立即渐隐，行为不变。
+     * 变亮——覆盖层 alpha 0→1（300ms）；收缩——降至 88%（300ms），两者同步。
+     * 最小动画时长保护（颜色与收缩共用）：快速单击松手时按下动画尚未播完，绝不立即反向——
+     * 只 postDelayed 等按下动画自然走到峰值（最亮 + 最小）后，再同时渐隐 + 弹回，
+     * 保证【渐显→峰值→渐隐】完整播放，一轮约 0.6 秒；
+     * 长按（含长按弹界面触发 CANCEL）时按下动画早已播完，松手立即回弹，行为不变。
      * 全部用线性插值：亮度与缩放匀速变化，观感均匀不突兀。
      */
     @Override
@@ -115,7 +117,6 @@ public class BlurFab extends FrameLayout {
             animatePress(1f, PRESS_DURATION);
             animateScale(PRESS_SCALE, PRESS_DURATION);
         } else if (mPressedAt > 0) {
-            animateScale(1f, RELEASE_DURATION);
             long elapsed = android.os.SystemClock.elapsedRealtime() - mPressedAt;
             if (elapsed >= PRESS_DURATION) {
                 mRelease.run();
