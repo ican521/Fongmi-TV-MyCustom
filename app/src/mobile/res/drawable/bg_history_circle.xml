@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 首页顶部历史圆钮：与胶囊搜索栏同一设计语言——纯色 #242424 + 白色 12% 1dp 亮边，
+<!-- 首页顶部历史圆钮：与胶囊搜索栏同一设计语言——纯色 #242424（90% 不透明，与底栏同款 capsule_bar_bg）+ 白色 12% 1dp 亮边，
      直径 40dp 正圆（与搜索胶囊同高，视觉成对）。全 APP 禁用水波纹：此处仅保留静态底色与描边，按压无反馈。 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 
-    <solid android:color="@color/fab_bg" />
+    <solid android:color="@color/capsule_bar_bg" />
 
     <stroke
         android:width="1dp"
