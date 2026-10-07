@@ -94,7 +94,7 @@ public class BlurFab extends FrameLayout {
     /**
      * 按压变亮特效，由系统 pressed 状态驱动（确定性生效）：
      * 按下——覆盖层 alpha 0→1（300ms）；松开——1→0（300ms）。
-     * 渐显中途被打断改向渐隐也是值连续的平滑过渡，无需等待按下动画播完。
+     * 线性插值：Decelerate 会让渐显前 100ms 爆发爬升到半值，视觉上"闪白"，故两个方向都用线性。
      */
     @Override
     protected void drawableStateChanged() {
@@ -106,7 +106,7 @@ public class BlurFab extends FrameLayout {
         if (mPress.getAlpha() == target) return;
         mPress.animate().alpha(target)
                 .setDuration(duration)
-                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .setInterpolator(new android.view.animation.LinearInterpolator())
                 .start();
     }
 }
