@@ -18,8 +18,8 @@ import com.fongmi.android.tv.utils.ResUtil;
 
 /**
  * 圆形纯色按钮：底层为纯色圆形背景（#242424，90% 不透明度微微透明，与胶囊底栏一致），
- * 其上为按压变亮覆盖层（常态透明，按下 200ms 渐显 30% 白、松开 250ms 渐隐），
- * 再上为图标，按下时整个按钮缩至 88%。对外行为与普通 View 一致（setVisibility / setOnClickListener / getTag 等）。
+ * 其上为按压变亮覆盖层（常态透明，按下 200ms 渐显 30% 白、松开 250ms 渐隐）。
+ * 对外行为与普通 View 一致（setVisibility / setOnClickListener / getTag 等）。
  */
 public class BlurFab extends FrameLayout {
 
@@ -29,14 +29,10 @@ public class BlurFab extends FrameLayout {
 
     private static final long PRESS_DURATION = 200L;
     private static final long RELEASE_DURATION = 250L;
-    private static final float PRESS_SCALE = 0.88f;
     private long mPressedAt;
 
     /** 回弹调度入口：postDelayed 延迟启动，绝不打断正在跑的按下动画（animate().start() 会取消旧动画导致峰值冻结）。 */
-    private final Runnable mRelease = () -> {
-        animatePress(0f, RELEASE_DURATION);
-        animateScale(1f, RELEASE_DURATION);
-    };
+    private final Runnable mRelease = () -> animatePress(0f, RELEASE_DURATION);
 
     public BlurFab(@NonNull Context context) {
         this(context, null);
@@ -99,11 +95,11 @@ public class BlurFab extends FrameLayout {
     }
 
     /**
-     * 按压双重特效，由系统 pressed 状态驱动（确定性生效）：
-     * 变亮——覆盖层 alpha 0→1（200ms）；缩放——整个按钮 1→0.88（200ms）；松开回弹均为 250ms。
+     * 按压变亮特效，由系统 pressed 状态驱动（确定性生效）：
+     * 变亮——覆盖层 alpha 0→1（200ms）；松开渐隐 250ms。
      * 最小动画时长保护：快速单击松手时按下动画尚未播完，绝不立即反向——
-     * 只 postDelayed 等按下动画自然走到峰值后再回弹，保证【渐显→峰值→渐隐】完整播放；
-     * 长按（含长按弹界面触发 CANCEL）时按下动画早已播完，松手立即回弹，行为不变。
+     * 只 postDelayed 等按下动画自然走到峰值后再渐隐，保证【渐显→峰值→渐隐】完整播放；
+     * 长按（含长按弹界面触发 CANCEL）时按下动画早已播完，松手立即渐隐，行为不变。
      * 变亮用线性插值：Decelerate 会让渐显前 100ms 爆发爬升到半值，视觉上"闪白"。
      */
     @Override
@@ -113,7 +109,6 @@ public class BlurFab extends FrameLayout {
         if (isPressed()) {
             mPressedAt = android.os.SystemClock.elapsedRealtime();
             animatePress(1f, PRESS_DURATION);
-            animateScale(PRESS_SCALE, PRESS_DURATION);
         } else if (mPressedAt > 0) {
             long elapsed = android.os.SystemClock.elapsedRealtime() - mPressedAt;
             if (elapsed >= PRESS_DURATION) {
@@ -129,14 +124,6 @@ public class BlurFab extends FrameLayout {
         mPress.animate().alpha(target)
                 .setDuration(duration)
                 .setInterpolator(new android.view.animation.LinearInterpolator())
-                .start();
-    }
-
-    private void animateScale(float target, long duration) {
-        if (getScaleX() == target) return;
-        animate().scaleX(target).scaleY(target)
-                .setDuration(duration)
-                .setInterpolator(new android.view.animation.DecelerateInterpolator())
                 .start();
     }
 }
