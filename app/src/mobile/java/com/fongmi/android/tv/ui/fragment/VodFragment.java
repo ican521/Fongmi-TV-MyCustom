@@ -43,7 +43,6 @@ import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.activity.HistoryActivity;
 import com.fongmi.android.tv.ui.activity.SearchActivity;
 import com.fongmi.android.tv.ui.adapter.TypeAdapter;
-import com.fongmi.android.tv.ui.custom.BlurFab;
 import com.fongmi.android.tv.ui.custom.RevealAnim;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.FilterDialog;
@@ -345,14 +344,12 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     }
 
     private boolean onLink(View view) {
-        // 延迟到按压回弹动画播完再弹窗：否则弹窗瞬间盖住按钮，回弹动画看不见。
-        view.postDelayed(() -> LinkDialog.show(this), BlurFab.RELEASE_DURATION);
+        LinkDialog.show(this);
         return true;
     }
 
     private void onFilter(View view) {
-        if (mAdapter.getItemCount() > 0)
-            view.postDelayed(() -> FilterDialog.create().filter(mAdapter.get(mBinding.pager.getCurrentItem()).getFilters()).show(this), BlurFab.RELEASE_DURATION);
+        if (mAdapter.getItemCount() > 0) FilterDialog.create().filter(mAdapter.get(mBinding.pager.getCurrentItem()).getFilters()).show(this);
     }
 
     /**
