@@ -12,6 +12,10 @@
     <color name="black_90">#E6000000</color>
     <color name="white">#FFFFFF</color>
     <color name="fab_bg">#242424</color>
+    <!-- 胶囊底栏/右下角圆钮统一背景：#242424 的 90% 不透明度 -->
+    <color name="capsule_bar_bg">#E6242424</color>
+    <!-- 白色 12% 透明度高光描边（底栏/圆钮/搜索胶囊共用） -->
+    <color name="white_12">#1FFFFFFF</color>
     <color name="white_20">#33FFFFFF</color>
     <color name="white_30">#4DFFFFFF</color>
     <color name="white_80">#CCFFFFFF</color>

@@ -13,6 +13,9 @@ import com.fongmi.android.tv.ui.fragment.SearchFragment;
 
 public class SearchActivity extends BaseActivity {
 
+    private static final String EXTRA_KEYWORD = "keyword";
+    private static final String EXTRA_AUTO_FINISH = "autoFinish";
+
     public static void start(Activity activity) {
         start(activity, "");
     }
@@ -28,17 +31,17 @@ public class SearchActivity extends BaseActivity {
      */
     public static void start(Activity activity, String keyword, boolean autoFinish) {
         Intent intent = new Intent(activity, SearchActivity.class);
-        intent.putExtra("keyword", keyword);
-        intent.putExtra("autoFinish", autoFinish);
+        intent.putExtra(EXTRA_KEYWORD, keyword);
+        intent.putExtra(EXTRA_AUTO_FINISH, autoFinish);
         activity.startActivity(intent);
     }
 
     private String getKeyword() {
-        return getIntent().getStringExtra("keyword");
+        return getIntent().getStringExtra(EXTRA_KEYWORD);
     }
 
     public boolean isAutoFinish() {
-        return getIntent().getBooleanExtra("autoFinish", false);
+        return getIntent().getBooleanExtra(EXTRA_AUTO_FINISH, false);
     }
 
     @Override

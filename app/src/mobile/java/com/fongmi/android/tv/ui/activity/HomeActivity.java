@@ -133,7 +133,7 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
         mPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                mBinding.navigation.setSelected(position, true);
+                mBinding.navigation.setSelected(position);
             }
         });
         // 设置子页面（3/4/5）走覆盖层 overlay，与 ViewPager2 的主页面互不干扰
@@ -144,7 +144,7 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
             default -> null;
         });
         mPager.setCurrentItem(0, false);
-        mBinding.navigation.setSelected(0, false);
+        mBinding.navigation.setSelected(0);
     }
 
     private void initConfig() {
@@ -187,7 +187,7 @@ public class HomeActivity extends BaseActivity implements CapsuleBottomBar.OnTab
             mManager.clear();
             mBinding.overlay.setVisibility(View.GONE);
             mPager.setCurrentItem(position, true);
-            mBinding.navigation.setSelected(position, true);
+            mBinding.navigation.setSelected(position);
         } else {
             mManager.change(position);
             mBinding.overlay.setVisibility(View.VISIBLE);

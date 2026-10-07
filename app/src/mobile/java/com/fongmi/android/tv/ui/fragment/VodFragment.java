@@ -43,6 +43,7 @@ import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.activity.HistoryActivity;
 import com.fongmi.android.tv.ui.activity.SearchActivity;
 import com.fongmi.android.tv.ui.adapter.TypeAdapter;
+import com.fongmi.android.tv.ui.custom.RevealAnim;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.FilterDialog;
 import com.fongmi.android.tv.ui.dialog.LinkDialog;
@@ -271,9 +272,9 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
                 v.animate()
                         .translationX(0f)
                         .alpha(1f)
-                        .setInterpolator(new OvershootInterpolator(0.9f))
+                        .setInterpolator(new OvershootInterpolator(RevealAnim.TENSION))
                         .setStartDelay(index * 110L)
-                        .setDuration(1050)
+                        .setDuration(RevealAnim.DURATION_MS)
                         .start();
                 index++;
             } else {
@@ -294,8 +295,8 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         bar.animate()
                 .translationY(0f)
                 .alpha(1f)
-                .setInterpolator(new OvershootInterpolator(0.9f))
-                .setDuration(1050)
+                .setInterpolator(new OvershootInterpolator(RevealAnim.TENSION))
+                .setDuration(RevealAnim.DURATION_MS)
                 .start();
     }
 

@@ -46,6 +46,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -59,6 +60,13 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
+
+// ===== 胶囊几何常量：与 activity_home.xml 的 288dp 占位宽、64dp 高、20dp 底边距配套 =====
+// 外层占位 288dp = 内容宽 280dp + 左右各 4dp 余量；入场位移 92dp ≈ 胶囊高 64dp + 底边距 20dp + 余量。
+private val BAR_WIDTH = 280.dp
+private val BAR_HEIGHT = 64.dp
+private val BAR_INSET = 4.dp
+private val BAR_SLIDE_DISTANCE = 92.dp
 
 /**
  * 悬浮胶囊底栏（Compose），视觉/尺寸/阴影/指示器照搬参考项目 KernelSU 的
@@ -117,14 +125,14 @@ class CapsuleBottomBar @JvmOverloads constructor(
         this.listener = listener
     }
 
-    fun selectTab(index: Int, animate: Boolean) {
+    fun selectTab(index: Int) {
         if (index < 0 || index >= tabs.size) return
         val changed = index != selected.intValue
         selected.intValue = index
         if (changed) listener?.onTabSelected(index)
     }
 
-    fun setSelected(index: Int, animate: Boolean) {
+    fun setSelected(index: Int) {
         if (index < 0 || index >= tabs.size) return
         selected.intValue = index
     }
@@ -136,7 +144,6 @@ class CapsuleBottomBar @JvmOverloads constructor(
 
     fun isTabVisible(@IdRes id: Int): Boolean = visibleIds.value.contains(id)
 
-    @Composable
     private fun themeColor(attrName: String, default: Int): Color {
         val res = context.resources
         var id = res.getIdentifier(attrName, "attr", "android")
@@ -152,8 +159,9 @@ class CapsuleBottomBar @JvmOverloads constructor(
 
     @Composable
     private fun Bar() {
-        val accent = themeColor("colorPrimary", 0xFF6750A4.toInt())
-        val onSurface = themeColor("colorOnSurface", 0xFFE6E6E6.toInt())
+        // 主题色进程内不变，remember 缓存避免每次重组重复解析 attribute。
+        val accent = remember { themeColor("colorPrimary", 0xFF6750A4.toInt()) }
+        val onSurface = remember { themeColor("colorOnSurface", 0xFFE6E6E6.toInt()) }
         val density = LocalDensity.current
         val scope = rememberCoroutineScope()
 
@@ -161,17 +169,17 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val slide = remember { Animatable(1f) }
         val barAlpha = remember { Animatable(0f) }
         // 位移距离 = 胶囊高度(64dp) + 底部外边距(20dp) + 小幅余量，行程适中。
-        val slideDistancePx = with(density) { 92.dp.toPx() }
+        val slideDistancePx = with(density) { BAR_SLIDE_DISTANCE.toPx() }
         val shouldReveal = revealRequested.value
         // 与顶栏/右下角圆钮一致的入场曲线：固定 1050ms、Overshoot tension 0.9（小幅过冲回弹）。
         val overshootEasing = Easing { f ->
             val t = f - 1.0f
-            t * t * ((0.9f + 1) * t + 0.9f) + 1.0f
+            t * t * ((RevealAnim.TENSION + 1) * t + RevealAnim.TENSION) + 1.0f
         }
         LaunchedEffect(shouldReveal) {
             if (shouldReveal) {
-                launch { slide.animateTo(0f, tween(durationMillis = 1050, easing = overshootEasing)) }
-                launch { barAlpha.animateTo(1f, tween(durationMillis = 1050)) }
+                launch { slide.animateTo(0f, tween(durationMillis = RevealAnim.DURATION_MS, easing = overshootEasing)) }
+                launch { barAlpha.animateTo(1f, tween(durationMillis = RevealAnim.DURATION_MS)) }
             }
         }
 
@@ -202,8 +210,10 @@ class CapsuleBottomBar @JvmOverloads constructor(
             }
         }
 
+        // 弹簧追逐手指：刚度取参考的 1000，追得快、延迟很轻。
+        val chaseSpec = spring<Float>(dampingRatio = 1f, stiffness = 1000f, visibilityThreshold = 0.001f)
         LaunchedEffect(sel, count, dragNonce) {
-            position.animateTo(sel.toFloat(), spring(dampingRatio = 1f, stiffness = 1000f))
+            position.animateTo(sel.toFloat(), chaseSpec)
         }
         LaunchedEffect(Unit) {
             snapshotFlow { position.velocity }.collect { v ->
@@ -215,7 +225,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
         val pill = CircleShape
         val indicatorColor = accent.copy(alpha = 0.15f)
         // 胶囊外层一圈亮色描边：底栏为深色，用白色 12% 透明度做细微亮边（参考项目的高光思路）。
-        val strokeColor = Color.White.copy(alpha = 0.12f)
+        val strokeColor = colorResource(R.color.white_12)
 
         // 胶囊本体（含 tab + 指示器）。panelOffset 加在最外层，拖动时整个胶囊
         // （背景 + 图标文字 + 指示器）作为一个刚体做橡皮筋微移，图标文字不会单独滑动。
@@ -232,7 +242,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
         ) {
             Box(
                 modifier = Modifier
-                    .width(280.dp)
+                    .width(BAR_WIDTH)
                     .fillMaxHeight(),
             ) {
             // 纯色背景层：RGB 36,36,36（#242424）+ 微微透明（90% 不透明度），裁成胶囊形，
@@ -241,7 +251,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(pill)
-                    .background(Color(0xE6242424)),
+                    .background(colorResource(R.color.capsule_bar_bg)),
             )
             Row(
                 modifier = Modifier
@@ -250,6 +260,16 @@ class CapsuleBottomBar @JvmOverloads constructor(
                     .border(1.dp, strokeColor, pill)
                     .pointerInput(count) {
                         if (count <= 1) return@pointerInput
+                        // 拖动结束/取消共用：标记一次校准并让橡皮筋位移弹回 0。
+                        val bounceBack: () -> Unit = {
+                            dragNonce++
+                            scope.launch {
+                                offsetAnimation.animateTo(
+                                    0f,
+                                    spring(dampingRatio = 1f, stiffness = 300f, visibilityThreshold = 0.5f),
+                                )
+                            }
+                        }
                         detectDragGestures(
                             onDragStart = { dragTarget = position.value },
                             onDragEnd = {
@@ -259,23 +279,9 @@ class CapsuleBottomBar @JvmOverloads constructor(
                                     selected.intValue = real
                                     listener?.onTabSelected(real)
                                 }
-                                dragNonce++
-                                scope.launch {
-                                    offsetAnimation.animateTo(
-                                        0f,
-                                        spring(dampingRatio = 1f, stiffness = 300f, visibilityThreshold = 0.5f),
-                                    )
-                                }
+                                bounceBack()
                             },
-                            onDragCancel = {
-                                dragNonce++
-                                scope.launch {
-                                    offsetAnimation.animateTo(
-                                        0f,
-                                        spring(dampingRatio = 1f, stiffness = 300f, visibilityThreshold = 0.5f),
-                                    )
-                                }
-                            },
+                            onDragCancel = bounceBack,
                         ) { change, dragAmount ->
                             change.consume()
                             // 用独立累加器 dragTarget 累加位移（而非滞后的 position.value），
@@ -284,12 +290,8 @@ class CapsuleBottomBar @JvmOverloads constructor(
                                 (dragTarget + dragAmount.x / tabWidthPx)
                                     .coerceIn(0f, (count - 1).toFloat())
                             dragTarget = next
-                            // 弹簧追逐手指：刚度取参考的 1000，追得快、延迟很轻。
                             scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                                position.animateTo(
-                                    next,
-                                    spring(dampingRatio = 1f, stiffness = 1000f, visibilityThreshold = 0.001f),
-                                )
+                                position.animateTo(next, chaseSpec)
                             }
                             // 橡皮筋：整个胶囊微移。
                             scope.launch {
@@ -297,8 +299,8 @@ class CapsuleBottomBar @JvmOverloads constructor(
                             }
                         }
                     }
-                    .height(64.dp)
-                    .padding(4.dp),
+                    .height(BAR_HEIGHT)
+                    .padding(BAR_INSET),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 visible.forEach { tab ->
@@ -311,7 +313,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
-                            ) { selectTab(tabs.indexOf(tab), true) },
+                            ) { selectTab(tabs.indexOf(tab)) },
                         contentAlignment = Alignment.Center,
                     ) {
                         Column(

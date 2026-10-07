@@ -2,7 +2,6 @@ package com.fongmi.android.tv.ui.custom;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -40,7 +39,7 @@ public class BlurFab extends FrameLayout {
         mBg = new View(context);
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.OVAL);
-        bg.setColor(Color.argb(230, 36, 36, 36));
+        bg.setColor(ContextCompat.getColor(context, R.color.capsule_bar_bg));
         mBg.setBackground(bg);
         LayoutParams bgLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         addView(mBg, bgLp);

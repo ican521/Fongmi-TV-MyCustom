@@ -1,0 +1,6 @@
+<resources>
+
+    <!-- 条目/卡片按压反馈等共用的 14dp 大圆角 -->
+    <dimen name="corner_large">14dp</dimen>
+
+</resources>
