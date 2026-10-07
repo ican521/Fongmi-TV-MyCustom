@@ -27,11 +27,14 @@
 
         <!-- 第一行标题栏（高 ?attr/actionBarSize，纯黑底）：
              左“首页” → 中间胶囊搜索栏（weight=1 填满中间区域）→ 右历史按钮。
-             胶囊内右侧为搜索图标（位置与原菜单搜索钮一致），左侧为轮播热搜词。 -->
+             整行 clickable：标题文字与行内空隙也要消费点击，防止触摸穿透到
+             下方内容区，误触滚进渐变区（标题正下方）的视频卡片。 -->
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?android:windowBackground"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
