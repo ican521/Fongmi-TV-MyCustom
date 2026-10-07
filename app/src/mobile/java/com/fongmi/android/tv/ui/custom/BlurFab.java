@@ -27,7 +27,7 @@ public class BlurFab extends FrameLayout {
     private final View mPress;
     private final AppCompatImageView mIcon;
 
-    private static final long PRESS_DURATION = 300L;
+    private static final long PRESS_DURATION = 150L;
     private static final long RELEASE_DURATION = 300L;
     /** 按下时收缩到的比例。 */
     private static final float PRESS_SCALE = 0.88f;
@@ -101,10 +101,12 @@ public class BlurFab extends FrameLayout {
 
     /**
      * 按压特效，由系统 pressed 状态驱动（确定性生效），变亮 + 收缩双重反馈：
-     * 变亮——覆盖层 alpha 0→1（300ms）；收缩——降至 88%（300ms），两者同步。
+     * 变亮——覆盖层 alpha 0→1（150ms 快速跟手）；收缩——降至 88%（同步 150ms）。
+     * 按下段刻意短于回弹段：线性插值在长时长前段变化细微（100ms 时亮度仅 1/3、收缩仅 4%，
+     * 观感是"手抬起了动画才开始"），按下减半后按住期间即可看到 2/3 以上进度，反馈及时。
      * 最小动画时长保护（颜色与收缩共用）：快速单击松手时按下动画尚未播完，绝不立即反向——
      * 只 postDelayed 等按下动画自然走到峰值（最亮 + 最小）后，再同时渐隐 + 弹回，
-     * 保证【渐显→峰值→渐隐】完整播放，一轮约 0.6 秒；
+     * 保证【渐显→峰值→渐隐】完整播放，一轮约 0.45 秒；
      * 长按（含长按弹界面触发 CANCEL）时按下动画早已播完，松手立即回弹，行为不变。
      * 全部用线性插值：亮度与缩放匀速变化，观感均匀不突兀。
      */
