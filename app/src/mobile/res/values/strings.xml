@@ -1,7 +1,6 @@
 <resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
 
     <!-- App -->
-    <string name="app_keep">Keep</string>
     <string name="app_history">History</string>
 
     <!-- Nav -->

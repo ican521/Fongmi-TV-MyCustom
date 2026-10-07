@@ -39,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:text="@string/home_title"
+                android:text="@string/nav_vod"
                 android:textAppearance="@style/ToolbarTextAppearance" />
 
             <!-- 胶囊搜索栏：高 40dp、圆角半径 20dp（=高度一半，完美胶囊），
