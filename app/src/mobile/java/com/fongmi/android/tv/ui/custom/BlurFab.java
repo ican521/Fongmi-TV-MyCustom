@@ -58,7 +58,8 @@ public class BlurFab extends FrameLayout {
         setForeground(ContextCompat.getDrawable(context, R.drawable.bg_fab_stroke));
 
         // 按压缩放：按下 120ms 缩至 88%、松开 220ms 恢复，与变亮反馈（bg_fab_press）构成双重按压特效。
-        setStateListAnimator(android.animation.StateListAnimator.inflate(context, R.animator.fab_press_scale));
+        setStateListAnimator(android.animation.StateListAnimator.inflate(
+                context.getResources(), R.animator.fab_press_scale, context.getTheme()));
 
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BlurFab);
