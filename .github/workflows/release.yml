@@ -6,10 +6,6 @@ on:
         description: 'Release 标签名（如 v5.6.3）'
         required: true
         default: 'latest'
-      notes:
-        description: '发布说明（正文，支持 Markdown）'
-        required: false
-        default: ''
 
 jobs:
   build:
@@ -69,5 +65,5 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.tag }}
           name: ${{ steps.ver.outputs.version }}
-          body: ${{ github.event.inputs.notes }}
+          body_path: notes.md
           files: app/build/outputs/apk/mobile/release/*.apk
