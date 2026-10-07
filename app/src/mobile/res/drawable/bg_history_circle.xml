@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 首页顶部历史圆钮：与胶囊搜索栏同一设计语言——纯色 #242424 + 白色 12% 1dp 亮边，
+     直径 40dp 正圆（与搜索胶囊同高，视觉成对）。按压反馈为限定在圆内的波纹（mask 裁切）。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/fab_bg" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/white_12" />
+        </shape>
+    </item>
+    <item android:id="@android:id/mask">
+        <shape android:shape="oval">
+            <solid android:color="@color/white" />
+        </shape>
+    </item>
+</ripple>
