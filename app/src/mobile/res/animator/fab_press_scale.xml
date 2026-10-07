@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 圆形按钮（BlurFab）按压缩放：按下 120ms 缩至 88%，松开 220ms 平滑恢复，
+     与变亮反馈（bg_fab_press）叠加构成双重按压特效。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:duration="120"
+                android:propertyName="scaleX"
+                android:valueTo="0.88"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="120"
+                android:propertyName="scaleY"
+                android:valueTo="0.88"
+                android:valueType="floatType" />
+        </set>
+    </item>
+
+    <item>
+        <set>
+            <objectAnimator
+                android:duration="220"
+                android:propertyName="scaleX"
+                android:valueTo="1"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="220"
+                android:propertyName="scaleY"
+                android:valueTo="1"
+                android:valueType="floatType" />
+        </set>
+    </item>
+
+</selector>
