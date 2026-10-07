@@ -43,6 +43,7 @@ import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.ui.activity.HistoryActivity;
 import com.fongmi.android.tv.ui.activity.SearchActivity;
 import com.fongmi.android.tv.ui.adapter.TypeAdapter;
+import com.fongmi.android.tv.ui.custom.BlurFab;
 import com.fongmi.android.tv.ui.custom.RevealAnim;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.FilterDialog;
@@ -343,13 +344,22 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         else if (mBinding.link.getVisibility() == View.INVISIBLE) mBinding.link.setVisibility(View.VISIBLE);
     }
 
+    /** 弹窗延迟到按压变亮/渐隐动画完整走完再出现：Activity 被弹窗遮罩接管后会停止渲染动画帧，立即弹窗会让特效只剩"一闪"。 */
+    private final Runnable mPendingLink = () -> LinkDialog.show(this);
+
+    private final Runnable mPendingFilter = () -> {
+        if (mAdapter.getItemCount() > 0) FilterDialog.create().filter(mAdapter.get(mBinding.pager.getCurrentItem()).getFilters()).show(this);
+    };
+
     private boolean onLink(View view) {
-        LinkDialog.show(this);
+        view.removeCallbacks(mPendingLink);
+        view.postDelayed(mPendingLink, BlurFab.RELEASE_DURATION);
         return true;
     }
 
     private void onFilter(View view) {
-        if (mAdapter.getItemCount() > 0) FilterDialog.create().filter(mAdapter.get(mBinding.pager.getCurrentItem()).getFilters()).show(this);
+        view.removeCallbacks(mPendingFilter);
+        view.postDelayed(mPendingFilter, BlurFab.RELEASE_DURATION);
     }
 
     /**
