@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -27,6 +28,13 @@ public class LinkDialog extends BaseAlertDialog {
 
     public static void show(Fragment fragment) {
         new LinkDialog().show(fragment.getChildFragmentManager(), null);
+    }
+
+    /** 关闭背景压暗遮罩：遮罩淡入会截断按钮按压动画的视觉呈现（实测恢复遮罩即"闪白"），弹窗直接浮在页面上。 */
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (getDialog() != null && getDialog().getWindow() != null) getDialog().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
     }
 
     @Override
