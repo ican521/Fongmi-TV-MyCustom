@@ -18,11 +18,14 @@ import com.fongmi.android.tv.utils.ResUtil;
 
 /**
  * 圆形纯色按钮：底层为纯色圆形背景（#242424，90% 不透明度微微透明，与胶囊底栏一致），
- * 上层为图标，按下时图标层叠加深色反馈。对外行为与普通 View 一致（setVisibility / setOnClickListener / getTag 等）。
+ * 其上为按压变亮覆盖层（常态透明，按下 120ms 渐显 30% 白、松开 220ms 渐隐），
+ * 再上为图标，按下时整个按钮缩至 88%。对外行为与普通 View 一致
+ * （setVisibility / setOnClickListener / getTag 等）。
  */
 public class BlurFab extends FrameLayout {
 
     private final View mBg;
+    private final View mPress;
     private final AppCompatImageView mIcon;
 
     public BlurFab(@NonNull Context context) {
@@ -45,14 +48,21 @@ public class BlurFab extends FrameLayout {
         LayoutParams bgLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         addView(mBg, bgLp);
 
-        // 上层：图标。padding 16dp，按下时背景加深（变亮）。
-        // duplicateParentState：按压层在子 View 上而 pressed 状态在父容器 BlurFab 上，
-        // 必须复制父状态 selector 才能被触发（此前按压变色从未生效的根因）。
+        // 按压变亮层：30% 白圆形，常态 alpha=0 完全透明，按下渐显（见 drawableStateChanged）。
+        // 不用 selector：按压状态在父容器上而覆盖层可挂在自身上，由代码直接驱动，机制确定生效。
+        mPress = new View(context);
+        GradientDrawable press = new GradientDrawable();
+        press.setShape(GradientDrawable.OVAL);
+        press.setColor(ContextCompat.getColor(context, R.color.fab_press_overlay));
+        mPress.setBackground(press);
+        mPress.setAlpha(0f);
+        LayoutParams pressLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        addView(mPress, pressLp);
+
+        // 上层：图标。padding 16dp。
         mIcon = new AppCompatImageView(context);
-        mIcon.setDuplicateParentStateEnabled(true);
         int pad = ResUtil.dp2px(16);
         mIcon.setPadding(pad, pad, pad, pad);
-        mIcon.setBackgroundResource(R.drawable.bg_fab_press);
         LayoutParams iconLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         iconLp.gravity = Gravity.CENTER;
         addView(mIcon, iconLp);
@@ -79,16 +89,25 @@ public class BlurFab extends FrameLayout {
     }
 
     /**
-     * 按压缩放特效：按下 120ms 缩至 88%、松开 220ms 减速恢复，
-     * 与图标层变亮反馈（bg_fab_press）构成双重按压特效。由系统 pressed 状态驱动。
+     * 按压双重特效，由系统 pressed 状态驱动（与缩放同源，确定性生效）：
+     * 变亮——按压覆盖层 alpha 0→1（120ms），松开 1→0（220ms）；
+     * 缩放——整个按钮 1→0.88（120ms），松开 0.88→1（220ms）。
      */
     @Override
     protected void drawableStateChanged() {
         super.drawableStateChanged();
-        float target = isPressed() ? 0.88f : 1f;
-        if (getScaleX() != target) {
-            animate().scaleX(target).scaleY(target)
-                    .setDuration(isPressed() ? 120L : 220L)
+        boolean pressed = isPressed();
+        float target = pressed ? 1f : 0f;
+        if (mPress.getAlpha() != target) {
+            mPress.animate().alpha(target)
+                    .setDuration(pressed ? 120L : 220L)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .start();
+        }
+        float scale = pressed ? 0.88f : 1f;
+        if (getScaleX() != scale) {
+            animate().scaleX(scale).scaleY(scale)
+                    .setDuration(pressed ? 120L : 220L)
                     .setInterpolator(new android.view.animation.DecelerateInterpolator())
                     .start();
         }
