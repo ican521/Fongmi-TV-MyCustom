@@ -86,7 +86,7 @@ class CapsuleBottomBar @JvmOverloads constructor(
 
     private val tabs = listOf(
         Tab(R.id.vod, R.drawable.ic_nav_vod, R.string.nav_vod),
-        Tab(R.id.keep, R.drawable.ic_nav_keep, R.string.app_keep),
+        Tab(R.id.keep, R.drawable.ic_nav_keep, R.string.nav_keep),
         Tab(R.id.setting, R.drawable.ic_nav_setting, R.string.nav_setting),
     )
 

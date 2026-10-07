@@ -5,7 +5,8 @@
     <string name="app_history">最近觀看</string>
 
     <!-- Nav -->
-    <string name="nav_vod">點播</string>
+    <string name="nav_vod">首頁</string>
+    <string name="nav_keep">收藏</string>
     <string name="nav_live">直播</string>
     <string name="nav_setting">設定</string>
 
