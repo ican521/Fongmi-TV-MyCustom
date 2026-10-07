@@ -153,7 +153,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         mBinding.top.setOnClickListener(this::onTop);
         mBinding.link.setOnClickListener(this::onLink);
         mBinding.filter.setOnClickListener(this::onFilter);
-        mBinding.filter.setOnLongClickListener(this::onLink);
         // 点胶囊空白处进入搜索输入页；点右侧搜索图标则直接搜索当前热搜词；历史钮独立点击。
         mBinding.searchPill.setOnClickListener(v -> SearchActivity.start(requireActivity()));
         mBinding.searchIcon.setOnClickListener(v -> {
