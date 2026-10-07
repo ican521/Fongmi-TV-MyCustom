@@ -18,7 +18,7 @@ import com.fongmi.android.tv.utils.ResUtil;
 
 /**
  * 圆形纯色按钮：底层为纯色圆形背景（#242424，90% 不透明度微微透明，与胶囊底栏一致），
- * 其上为按压变亮覆盖层（常态透明，按下 60ms 渐显 30% 白、松开 250ms 渐隐）。
+ * 其上为按压变亮覆盖层（常态透明，按下 300ms 渐显 30% 白、松开 300ms 渐隐）。
  * 无缩放动画：单击时按钮自身的弹窗需立即出现，颜色渐隐被遮罩盖住无形状跳变，无感。
  * 对外行为与普通 View 一致（setVisibility / setOnClickListener / getTag 等）。
  */
@@ -28,9 +28,8 @@ public class BlurFab extends FrameLayout {
     private final View mPress;
     private final AppCompatImageView mIcon;
 
-    // 渐显必须快于单击的按压时长（约 60~100ms），否则单击时未达峰值即回落，视觉上只是"闪一下"。
-    private static final long PRESS_DURATION = 60L;
-    private static final long RELEASE_DURATION = 250L;
+    private static final long PRESS_DURATION = 300L;
+    private static final long RELEASE_DURATION = 300L;
 
     public BlurFab(@NonNull Context context) {
         this(context, null);
@@ -94,8 +93,7 @@ public class BlurFab extends FrameLayout {
 
     /**
      * 按压变亮特效，由系统 pressed 状态驱动（确定性生效）：
-     * 按下——覆盖层 alpha 0→1（60ms，快于单击按压时长以保证到达峰值）；
-     * 松开——1→0（250ms，从峰值从容渐隐，跨越弹窗出现的时刻）。
+     * 按下——覆盖层 alpha 0→1（300ms）；松开——1→0（300ms）。
      * 渐显中途被打断改向渐隐也是值连续的平滑过渡，无需等待按下动画播完。
      */
     @Override
