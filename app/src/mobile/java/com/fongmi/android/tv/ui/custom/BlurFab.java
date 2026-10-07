@@ -28,8 +28,8 @@ public class BlurFab extends FrameLayout {
     private final View mPress;
     private final AppCompatImageView mIcon;
 
-    private static final long PRESS_DURATION = 120L;
-    private static final long RELEASE_DURATION = 300L;
+    public static final long PRESS_DURATION = 120L;
+    public static final long RELEASE_DURATION = 300L;
     private long mPressedAt;
 
     /** 回弹动画入口：postDelayed 延迟调度，避免打断未播完的按下动画。 */
