@@ -57,9 +57,9 @@ public class Updater implements Download.Callback, UpdateListener {
     private void doInBackground(FragmentActivity activity) {
         try {
             JSONObject object = new JSONObject(OkHttp.string(Github.getRelease()));
-            // tag_name 约定为纯数字版本号（与 versionCode 比较），例如 564。
-            int code = parseCode(object.optString("tag_name"));
-            if (code <= BuildConfig.VERSION_CODE) return;
+            // tag_name 约定为 vX.Y.Z 语义化版本（与 versionName 比较），例如 v2.1.0。
+            String remote = object.optString("tag_name");
+            if (!isNewer(remote, BuildConfig.VERSION_NAME)) return;
             String name = object.optString("name");
             if (TextUtils.isEmpty(name)) name = object.optString("tag_name");
             final String version = name;
@@ -72,20 +72,29 @@ public class Updater implements Download.Callback, UpdateListener {
         }
     }
 
-    private int parseCode(String tag) {
-        if (TextUtils.isEmpty(tag)) return 0;
-        try {
-            return Integer.parseInt(tag.trim());
-        } catch (NumberFormatException e) {
-            // 兼容 "v564" / "5.6.4" 等写法：剔除非数字字符后取整。
-            String digits = tag.replaceAll("[^0-9]", "");
-            if (TextUtils.isEmpty(digits)) return 0;
+    /** 语义化版本比较：remote 大于 local 时返回 true（逐段比较 major.minor.patch，缺段补 0）。 */
+    private boolean isNewer(String remote, String local) {
+        int[] r = parseVersion(remote);
+        int[] l = parseVersion(local);
+        for (int i = 0; i < 3; i++) {
+            if (r[i] != l[i]) return r[i] > l[i];
+        }
+        return false;
+    }
+
+    private int[] parseVersion(String value) {
+        int[] parts = new int[]{0, 0, 0};
+        if (TextUtils.isEmpty(value)) return parts;
+        // 兼容 "v2.1.0" / "V2.1.0" / "2.1" / "2" 等写法。
+        String cleaned = value.trim().replaceFirst("^[vV]", "");
+        String[] segs = cleaned.split("\\.");
+        for (int i = 0; i < Math.min(segs.length, 3); i++) {
             try {
-                return Integer.parseInt(digits);
+                parts[i] = Integer.parseInt(segs[i].trim());
             } catch (NumberFormatException ignored) {
-                return 0;
             }
         }
+        return parts;
     }
 
     private String findApkUrl(JSONArray assets, String apkName) {
