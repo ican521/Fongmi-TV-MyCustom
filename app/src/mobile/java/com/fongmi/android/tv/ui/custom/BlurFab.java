@@ -57,10 +57,6 @@ public class BlurFab extends FrameLayout {
         // 最上层：与底栏一致的亮色描边（白色 12%、1dp），作为前景覆盖在图标之上。
         setForeground(ContextCompat.getDrawable(context, R.drawable.bg_fab_stroke));
 
-        // 按压缩放：按下 120ms 缩至 88%、松开 220ms 恢复，与变亮反馈（bg_fab_press）构成双重按压特效。
-        setStateListAnimator(android.animation.StateListAnimator.inflate(
-                context.getResources(), R.animator.fab_press_scale, context.getTheme()));
-
         if (attrs != null) {
             TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BlurFab);
             try {
@@ -77,5 +73,21 @@ public class BlurFab extends FrameLayout {
 
     public AppCompatImageView getIcon() {
         return mIcon;
+    }
+
+    /**
+     * 按压缩放特效：按下 120ms 缩至 88%、松开 220ms 减速恢复，
+     * 与图标层变亮反馈（bg_fab_press）构成双重按压特效。由系统 pressed 状态驱动。
+     */
+    @Override
+    protected void drawableStateChanged() {
+        super.drawableStateChanged();
+        float target = isPressed() ? 0.88f : 1f;
+        if (getScaleX() != target) {
+            animate().scaleX(target).scaleY(target)
+                    .setDuration(isPressed() ? 120L : 220L)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .start();
+        }
     }
 }
