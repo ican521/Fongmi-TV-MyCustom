@@ -39,7 +39,7 @@
 先准备以下环境与文件：
 
 - **JDK 21、Android SDK、Python 3.10**。SDK 平台版本按 `compileSdk` 设置；Python 可用 `py -3.10 --version` 确认，找不到时在 [chaquo/build.gradle](chaquo/build.gradle) 的 Python 区块设置 `buildPython`。
-- **配套 AAR**：放入 `app/libs/`。`lib-*.aar` 未纳入 Git，仅 clone 不包含完整的播放器依赖。
+- **配套 AAR**：播放器等核心库以 aar 形式随仓库提交在 `app/libs/`（共 26 个），clone 后即可直接编译，无需额外下载；如需升级依赖库，用新文件覆盖对应 aar 即可。
 - **自己的签名文件与 `local.properties`**：在仓库根目录创建如下配置，将所有示例值替换成自己的信息。
 
 ```properties
