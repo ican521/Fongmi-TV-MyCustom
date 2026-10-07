@@ -18,7 +18,7 @@ import com.fongmi.android.tv.utils.ResUtil;
 
 /**
  * 圆形纯色按钮：底层为纯色圆形背景（#242424，90% 不透明度微微透明，与胶囊底栏一致），
- * 其上为按压变亮覆盖层（常态透明，按下 200ms 渐显 30% 白、松开 250ms 渐隐）。
+ * 其上为按压变亮覆盖层（常态透明，按下 300ms 渐显变亮 + 同步收缩至 88%，松开 300ms 渐隐弹回）。
  * 对外行为与普通 View 一致（setVisibility / setOnClickListener / getTag 等）。
  */
 public class BlurFab extends FrameLayout {
@@ -29,6 +29,8 @@ public class BlurFab extends FrameLayout {
 
     private static final long PRESS_DURATION = 300L;
     private static final long RELEASE_DURATION = 300L;
+    /** 按下时收缩到的比例。 */
+    private static final float PRESS_SCALE = 0.88f;
     private long mPressedAt;
 
     /** 回弹调度入口：postDelayed 延迟启动，绝不打断正在跑的按下动画（animate().start() 会取消旧动画导致峰值冻结）。 */
@@ -95,12 +97,14 @@ public class BlurFab extends FrameLayout {
     }
 
     /**
-     * 按压变亮特效，由系统 pressed 状态驱动（确定性生效）：
+     * 按压特效，由系统 pressed 状态驱动（确定性生效），变亮 + 收缩双重反馈：
      * 变亮——覆盖层 alpha 0→1（300ms）；松开渐隐 300ms，整体呼吸一轮约 0.6 秒。
-     * 最小动画时长保护：快速单击松手时按下动画尚未播完，绝不立即反向——
+     * 收缩——按下降至 88%（300ms 同步）；松手立即弹回 100%（300ms），随手指离开即时恢复形状，
+     * 不参与颜色的最小动画时长保护（颜色补齐期间缩放已在回弹，二者解耦互不干扰）。
+     * 最小动画时长保护（仅颜色）：快速单击松手时按下动画尚未播完，绝不立即反向——
      * 只 postDelayed 等按下动画自然走到峰值后再渐隐，保证【渐显→峰值→渐隐】完整播放；
      * 长按（含长按弹界面触发 CANCEL）时按下动画早已播完，松手立即渐隐，行为不变。
-     * 变亮用线性插值：亮度匀速升降，观感均匀不突兀。
+     * 全部用线性插值：亮度与缩放匀速变化，观感均匀不突兀。
      */
     @Override
     protected void drawableStateChanged() {
@@ -109,7 +113,9 @@ public class BlurFab extends FrameLayout {
         if (isPressed()) {
             mPressedAt = android.os.SystemClock.elapsedRealtime();
             animatePress(1f, PRESS_DURATION);
+            animateScale(PRESS_SCALE, PRESS_DURATION);
         } else if (mPressedAt > 0) {
+            animateScale(1f, RELEASE_DURATION);
             long elapsed = android.os.SystemClock.elapsedRealtime() - mPressedAt;
             if (elapsed >= PRESS_DURATION) {
                 mRelease.run();
@@ -122,6 +128,13 @@ public class BlurFab extends FrameLayout {
     private void animatePress(float target, long duration) {
         if (mPress.getAlpha() == target) return;
         mPress.animate().alpha(target)
+                .setDuration(duration)
+                .setInterpolator(new android.view.animation.LinearInterpolator())
+                .start();
+    }
+
+    private void animateScale(float target, long duration) {
+        animate().scaleX(target).scaleY(target)
                 .setDuration(duration)
                 .setInterpolator(new android.view.animation.LinearInterpolator())
                 .start();
