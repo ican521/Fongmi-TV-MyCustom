@@ -7,7 +7,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -74,10 +73,5 @@ public class BlurFab extends FrameLayout {
 
     public AppCompatImageView getIcon() {
         return mIcon;
-    }
-
-    @Override
-    public void setVisibility(int visibility) {
-        super.setVisibility(visibility);
     }
 }
