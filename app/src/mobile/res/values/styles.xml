@@ -27,6 +27,8 @@
     <style name="Theme.Crash" parent="Theme.Base">
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowBackground">@color/grey_700</item>
+        <!-- 崩溃页同样禁用水波纹：高亮色置透明（页面内 MaterialButton 波纹色走 colorControlHighlight）。 -->
+        <item name="android:colorControlHighlight">@android:color/transparent</item>
     </style>
 
     <style name="Control">
