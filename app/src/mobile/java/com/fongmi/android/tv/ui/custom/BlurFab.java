@@ -27,8 +27,8 @@ public class BlurFab extends FrameLayout {
     private final View mPress;
     private final AppCompatImageView mIcon;
 
-    private static final long PRESS_DURATION = 200L;
-    private static final long RELEASE_DURATION = 250L;
+    private static final long PRESS_DURATION = 500L;
+    private static final long RELEASE_DURATION = 500L;
     private long mPressedAt;
 
     /** 回弹调度入口：postDelayed 延迟启动，绝不打断正在跑的按下动画（animate().start() 会取消旧动画导致峰值冻结）。 */
@@ -96,7 +96,7 @@ public class BlurFab extends FrameLayout {
 
     /**
      * 按压变亮特效，由系统 pressed 状态驱动（确定性生效）：
-     * 变亮——覆盖层 alpha 0→1（200ms）；松开渐隐 250ms。
+     * 变亮——覆盖层 alpha 0→1（500ms）；松开渐隐 500ms，整体呼吸一轮约 1 秒。
      * 最小动画时长保护：快速单击松手时按下动画尚未播完，绝不立即反向——
      * 只 postDelayed 等按下动画自然走到峰值后再渐隐，保证【渐显→峰值→渐隐】完整播放；
      * 长按（含长按弹界面触发 CANCEL）时按下动画早已播完，松手立即渐隐，行为不变。
