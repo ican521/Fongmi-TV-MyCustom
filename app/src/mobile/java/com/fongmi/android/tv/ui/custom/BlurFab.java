@@ -29,8 +29,7 @@ public class BlurFab extends FrameLayout {
     private final AppCompatImageView mIcon;
 
     private static final long PRESS_DURATION = 300L;
-    /** 渐隐时长。单击链路（onLink/onFilter）的弹窗需延迟此刻长出现，否则遮罩会让 Activity 停止渲染动画帧。 */
-    public static final long RELEASE_DURATION = 500L;
+    private static final long RELEASE_DURATION = 500L;
 
     public BlurFab(@NonNull Context context) {
         this(context, null);
