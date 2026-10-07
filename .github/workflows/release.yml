@@ -48,6 +48,12 @@ jobs:
       - name: Run assembleMobileRelease
         run: ./gradlew assembleMobileRelease --stacktrace
 
+      - name: Read app version
+        id: ver
+        run: |
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle | head -n1)
+          echo "version=v$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Upload release apk (artifact)
         uses: actions/upload-artifact@v4
         with:
@@ -58,6 +64,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag }}
-          name: Fongmi Release ${{ github.event.inputs.tag }}
+          name: ${{ steps.ver.outputs.version }}
           generate_release_notes: true
           files: app/build/outputs/apk/mobile/release/*.apk
