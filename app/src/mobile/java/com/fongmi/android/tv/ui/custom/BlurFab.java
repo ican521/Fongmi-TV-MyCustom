@@ -18,7 +18,7 @@ import com.fongmi.android.tv.utils.ResUtil;
 
 /**
  * 圆形纯色按钮：底层为纯色圆形背景（#242424，90% 不透明度微微透明，与胶囊底栏一致），
- * 其上为按压变亮覆盖层（常态透明，按下 300ms 渐显 30% 白、松开 300ms 渐隐）。
+ * 其上为按压变亮覆盖层（常态透明，按下 300ms 渐显 30% 白、松开 500ms 渐隐）。
  * 无缩放动画：单击时按钮自身的弹窗需立即出现，颜色渐隐被遮罩盖住无形状跳变，无感。
  * 对外行为与普通 View 一致（setVisibility / setOnClickListener / getTag 等）。
  */
@@ -29,7 +29,7 @@ public class BlurFab extends FrameLayout {
     private final AppCompatImageView mIcon;
 
     private static final long PRESS_DURATION = 300L;
-    private static final long RELEASE_DURATION = 300L;
+    private static final long RELEASE_DURATION = 500L;
 
     public BlurFab(@NonNull Context context) {
         this(context, null);
@@ -93,7 +93,7 @@ public class BlurFab extends FrameLayout {
 
     /**
      * 按压变亮特效，由系统 pressed 状态驱动（确定性生效）：
-     * 按下——覆盖层 alpha 0→1（300ms）；松开——1→0（300ms）。
+     * 按下——覆盖层 alpha 0→1（300ms）；松开——1→0（500ms）。
      * 线性插值：Decelerate 会让渐显前 100ms 爆发爬升到半值，视觉上"闪白"，故两个方向都用线性。
      */
     @Override
