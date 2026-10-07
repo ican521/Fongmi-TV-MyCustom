@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewbinding.ViewBinding;
 
+import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.config.LiveConfig;
 import com.fongmi.android.tv.bean.Live;
 import com.fongmi.android.tv.databinding.DialogLiveBinding;
@@ -57,7 +58,7 @@ public class LiveDialog extends BaseAlertDialog implements LiveAdapter.OnClickLi
         binding.recycler.setAdapter(adapter);
         binding.recycler.setItemAnimator(null);
         binding.recycler.setHasFixedSize(true);
-        if (isFull()) binding.recycler.setMaxHeight(ResUtil.dp2px(264));
+        if (isFull()) binding.recycler.setMaxHeight(ResUtil.getDimen(R.dimen.popup_max_height));
         binding.recycler.addItemDecoration(new SpaceItemDecoration(1, 8));
         binding.recycler.post(() -> binding.recycler.scrollToPosition(LiveConfig.getHomeIndex()));
     }

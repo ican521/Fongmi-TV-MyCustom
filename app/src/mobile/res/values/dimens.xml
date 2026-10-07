@@ -3,4 +3,7 @@
     <!-- 条目/卡片按压反馈等共用的 14dp 大圆角 -->
     <dimen name="corner_large">14dp</dimen>
 
+    <!-- 弹出菜单/弹窗列表的最大高度（设置下拉菜单、直播源、历史记录共用） -->
+    <dimen name="popup_max_height">264dp</dimen>
+
 </resources>

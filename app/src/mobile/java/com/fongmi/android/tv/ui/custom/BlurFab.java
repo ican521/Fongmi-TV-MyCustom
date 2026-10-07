@@ -14,6 +14,7 @@ import androidx.appcompat.widget.AppCompatImageView;
 import androidx.core.content.ContextCompat;
 
 import com.fongmi.android.tv.R;
+import com.fongmi.android.tv.utils.ResUtil;
 
 /**
  * 圆形纯色按钮：底层为纯色圆形背景（#242424，90% 不透明度微微透明，与胶囊底栏一致），
@@ -46,7 +47,7 @@ public class BlurFab extends FrameLayout {
 
         // 上层：图标。padding 16dp，按下时背景加深。
         mIcon = new AppCompatImageView(context);
-        int pad = (int) (16 * context.getResources().getDisplayMetrics().density + 0.5f);
+        int pad = ResUtil.dp2px(16);
         mIcon.setPadding(pad, pad, pad, pad);
         mIcon.setBackgroundResource(R.drawable.bg_fab_press);
         LayoutParams iconLp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);

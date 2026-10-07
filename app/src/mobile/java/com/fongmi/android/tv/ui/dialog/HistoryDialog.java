@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewbinding.ViewBinding;
 
+import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.databinding.DialogHistoryBinding;
 import com.fongmi.android.tv.impl.ConfigListener;
@@ -81,7 +82,7 @@ public class HistoryDialog extends BaseAlertDialog implements ConfigAdapter.OnCl
         adapter = new ConfigAdapter(this);
         binding.recycler.setItemAnimator(null);
         binding.recycler.setHasFixedSize(false);
-        if (isFull()) binding.recycler.setMaxHeight(ResUtil.dp2px(264));
+        if (isFull()) binding.recycler.setMaxHeight(ResUtil.getDimen(R.dimen.popup_max_height));
         binding.recycler.addItemDecoration(new SpaceItemDecoration(1, 8));
         binding.recycler.setAdapter(adapter.readOnly(readOnly).addAll(type));
     }

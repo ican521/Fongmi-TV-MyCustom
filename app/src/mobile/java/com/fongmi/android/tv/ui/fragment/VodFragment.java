@@ -66,6 +66,20 @@ import okhttp3.Response;
 
 public class VodFragment extends BaseFragment implements ConfigListener, SiteListener, FilterListener, TypeAdapter.OnClickListener {
 
+    // 360 影视热搜榜接口，拉取结果同时缓存（Setting.putHot）供搜索页复用。
+    private static final String HOT_RANK_URL = "https://api.web.360kan.com/v1/rank?cat=1";
+    private static final String HOT_RANK_REFERER = "https://www.360kan.com/rank/general";
+    // 右下角按钮入场的起始位移：屏幕右边框之外。
+    private static final int FAB_SLIDE_DP = 280;
+    // 顶栏入场的起始位移：屏幕上边框之外。
+    private static final int APPBAR_SLIDE_DP = 180;
+    // 多个右下角按钮入场的错落延迟。
+    private static final long FAB_STAGGER_MS = 110;
+    // 分类页签指示器的切换动画时长。
+    private static final int INDICATOR_ANIM_MS = 280;
+    // 顶部热搜词轮播间隔。
+    private static final long HOT_ROTATE_MS = 15_000;
+
     private FragmentVodBinding mBinding;
     private SiteViewModel mViewModel;
     private TypeAdapter mAdapter;
@@ -120,7 +134,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
 
     /** 按钮初始置于屏幕右边框之外、透明，等待入场动画。 */
     private void initFabEnter() {
-        fabSlidePx = ResUtil.dp2px(280);
+        fabSlidePx = ResUtil.dp2px(FAB_SLIDE_DP);
         for (View v : new View[]{mBinding.filter, mBinding.link, mBinding.top}) {
             v.setTranslationX(fabSlidePx);
             v.setAlpha(0f);
@@ -129,7 +143,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
 
     /** 顶栏初始置于屏幕上边框之外、透明，等待入场动画。 */
     private void initAppBarEnter() {
-        appBarSlidePx = ResUtil.dp2px(180);
+        appBarSlidePx = ResUtil.dp2px(APPBAR_SLIDE_DP);
         mBinding.appBar.setTranslationY(-appBarSlidePx);
         mBinding.appBar.setAlpha(0f);
     }
@@ -240,7 +254,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             return;
         }
         mIndicatorAnim = ValueAnimator.ofFloat(0f, 1f);
-        mIndicatorAnim.setDuration(280);
+        mIndicatorAnim.setDuration(INDICATOR_ANIM_MS);
         mIndicatorAnim.setInterpolator(new AccelerateDecelerateInterpolator());
         mIndicatorAnim.addUpdateListener(a -> {
             View t = llm.findViewByPosition(mTypePosition);
@@ -273,7 +287,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
                         .translationX(0f)
                         .alpha(1f)
                         .setInterpolator(new OvershootInterpolator(RevealAnim.TENSION))
-                        .setStartDelay(index * 110L)
+                        .setStartDelay(index * FAB_STAGGER_MS)
                         .setDuration(RevealAnim.DURATION_MS)
                         .start();
                 index++;
@@ -345,7 +359,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     private void initHotWord() {
         mHotWords = Word.objectFrom(Setting.getHot()).getData();
         showNextHot();
-        OkHttp.newCall("https://api.web.360kan.com/v1/rank?cat=1", Map.of(HttpHeaders.REFERER, "https://www.360kan.com/rank/general")).enqueue(new Callback() {
+        OkHttp.newCall(HOT_RANK_URL, Map.of(HttpHeaders.REFERER, HOT_RANK_REFERER)).enqueue(new Callback() {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 String result = response.body().string();
@@ -369,7 +383,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
             mHotIndex++;
         }
         mHotHandler.removeCallbacks(mHotTask);
-        mHotHandler.postDelayed(mHotTask, 15_000);
+        mHotHandler.postDelayed(mHotTask, HOT_ROTATE_MS);
     }
 
     private void showProgress() {

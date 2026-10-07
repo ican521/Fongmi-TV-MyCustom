@@ -112,7 +112,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
      * 避免矩形按压层超出 14dp 卡片圆角。
      */
     private void setRowPressBackground(View row, boolean topRound, boolean bottomRound) {
-        float r = ResUtil.dp2px(14);
+        float r = ResUtil.getDimen(R.dimen.corner_large);
         GradientDrawable pressed = new GradientDrawable();
         pressed.setColor(ResUtil.getColor(R.color.press_overlay));
         pressed.setCornerRadii(new float[]{
@@ -271,14 +271,14 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
 
     /**
      * 照搬参考项目 SegmentedDropdownItem 的交互：点击后在箭头处弹出深色圆角菜单，
-     * 当前选项以主题主色文字 + 同色对勾标记，其余为白色文字，点外部关闭。
+     * 当前选项以主题主色文字 + 同色对勾标记，其余为近白色文字（colorOnSurface，与全局文字色一致），点外部关闭。
      *
      * @param widthPx 菜单固定宽度（历史站源长地址使用），0 表示包裹内容。
      */
     private void showOptionMenu(View anchor, String[] items, int selectedIndex, int widthPx, OnOptionPicked listener) {
-        TypedValue value = new TypedValue();
-        requireContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, value, true);
-        int colorPrimary = value.data;
+        int colorPrimary = resolveAttr(androidx.appcompat.R.attr.colorPrimary, Color.WHITE);
+        // 未选中文字与全局标题/图标保持同一来源：Material3 colorOnSurface（近白色）。
+        int colorText = resolveAttr(com.google.android.material.R.attr.colorOnSurface, Color.WHITE);
 
         LinearLayout container = new LinearLayout(requireContext());
         container.setOrientation(LinearLayout.VERTICAL);
@@ -301,7 +301,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
             MaterialTextView text = new MaterialTextView(requireContext());
             text.setText(items[i]);
             text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-            text.setTextColor(selected ? colorPrimary : Color.WHITE);
+            text.setTextColor(selected ? colorPrimary : colorText);
             text.setSingleLine(true);
             text.setEllipsize(TextUtils.TruncateAt.MIDDLE);
             LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
@@ -318,8 +318,8 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
             container.addView(row, new LinearLayout.LayoutParams(rowWidth, LinearLayout.LayoutParams.WRAP_CONTENT));
         }
 
-        // 深色圆角背景放在可滚动容器上，长列表最多 264dp 高。
-        final int maxHeight = ResUtil.dp2px(264);
+        // 深色圆角背景放在可滚动容器上，长列表最大高度 popup_max_height（与直播源/历史弹窗一致）。
+        final int maxHeight = ResUtil.getDimen(R.dimen.popup_max_height);
         ScrollView scrollView = new ScrollView(requireContext()) {
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -354,6 +354,12 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         } else {
             popup.showAsDropDown(anchor, 0, -(anchor.getHeight() + scrollView.getMeasuredHeight() + gap), Gravity.END);
         }
+    }
+
+    /** 解析当前主题属性颜色，解析失败时回退到 fallback。 */
+    private int resolveAttr(int attr, int fallback) {
+        TypedValue value = new TypedValue();
+        return requireContext().getTheme().resolveAttribute(attr, value, true) ? value.data : fallback;
     }
 
     private interface OnOptionPicked {
