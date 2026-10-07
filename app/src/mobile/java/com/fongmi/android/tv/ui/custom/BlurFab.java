@@ -102,8 +102,8 @@ public class BlurFab extends FrameLayout {
     /**
      * 按压特效，由系统 pressed 状态驱动（确定性生效），变亮 + 收缩双重反馈：
      * 变亮——覆盖层 alpha 0→1（150ms 快速跟手）；收缩——降至 88%（同步 150ms）。
-     * 按下段刻意短于回弹段：线性插值在长时长前段变化细微（100ms 时亮度仅 1/3、收缩仅 4%，
-     * 观感是"手抬起了动画才开始"），按下减半后按住期间即可看到 2/3 以上进度，反馈及时。
+     * 零延迟步进：ACTION_DOWN 同步跳变到 40% 亮度 + 95% 尺寸（同一帧渲染，肉眼零等待），
+     * 动画再从该中间态继续到峰值——"手指一碰到就看到变化"，之后再平滑推进。
      * 最小动画时长保护（颜色与收缩共用）：快速单击松手时按下动画尚未播完，绝不立即反向——
      * 只 postDelayed 等按下动画自然走到峰值（最亮 + 最小）后，再同时渐隐 + 弹回，
      * 保证【渐显→峰值→渐隐】完整播放，一轮约 0.45 秒；
@@ -116,6 +116,11 @@ public class BlurFab extends FrameLayout {
         removeCallbacks(mRelease);
         if (isPressed()) {
             mPressedAt = android.os.SystemClock.elapsedRealtime();
+            // 零延迟步进：按下瞬间同步跳到可见中间态（setAlpha/setScale 立即生效，不等下一帧调度），
+            // 动画再从此继续到峰值——手指碰到的第一帧就有明显反馈，彻底跟手。
+            mPress.setAlpha(0.4f);
+            setScaleX(0.95f);
+            setScaleY(0.95f);
             animatePress(1f, PRESS_DURATION);
             animateScale(PRESS_SCALE, PRESS_DURATION);
         } else if (mPressedAt > 0) {
