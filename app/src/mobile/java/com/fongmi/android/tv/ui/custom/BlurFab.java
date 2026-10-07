@@ -100,8 +100,7 @@ public class BlurFab extends FrameLayout {
      * 最小动画时长保护：快速单击松手时按下动画尚未播完，绝不立即反向——
      * 只 postDelayed 等按下动画自然走到峰值后再渐隐，保证【渐显→峰值→渐隐】完整播放；
      * 长按（含长按弹界面触发 CANCEL）时按下动画早已播完，松手立即渐隐，行为不变。
-     * 变亮用缓入缓出插值（AccelerateDecelerate，起步收尾柔和、中段均匀）：
-     * Decelerate 会让渐显前 100ms 爆发爬升到半值，视觉上"闪白"，故不用。
+     * 变亮用线性插值：亮度匀速升降，观感均匀不突兀。
      */
     @Override
     protected void drawableStateChanged() {
@@ -124,7 +123,7 @@ public class BlurFab extends FrameLayout {
         if (mPress.getAlpha() == target) return;
         mPress.animate().alpha(target)
                 .setDuration(duration)
-                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .setInterpolator(new android.view.animation.LinearInterpolator())
                 .start();
     }
 }
