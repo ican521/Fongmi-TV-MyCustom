@@ -30,6 +30,10 @@ public class BlurFab extends FrameLayout {
 
     private static final long PRESS_DURATION = 500L;
     private static final long RELEASE_DURATION = 500L;
+    private long mPressedAt;
+
+    /** 渐隐调度入口：postDelayed 延迟启动，绝不打断正在跑的渐显（animate().start() 会取消旧动画导致峰值冻结）。 */
+    private final Runnable mRelease = () -> animatePress(0f, RELEASE_DURATION);
 
     public BlurFab(@NonNull Context context) {
         this(context, null);
@@ -94,12 +98,26 @@ public class BlurFab extends FrameLayout {
     /**
      * 按压变亮特效，由系统 pressed 状态驱动（确定性生效）：
      * 按下——覆盖层 alpha 0→1（500ms）；松开——1→0（500ms）。
+     * 最小动画时长保护：快速单击松手时渐显尚未播完，绝不立即反向——
+     * 只 postDelayed 等渐显自然走到峰值后再渐隐，保证【渐显→峰值→渐隐】完整播放；
+     * 长按（含长按弹界面触发 CANCEL）时渐显早已播完，松手立即渐隐，行为不变。
      * 线性插值：Decelerate 会让渐显前 100ms 爆发爬升到半值，视觉上"闪白"，故两个方向都用线性。
      */
     @Override
     protected void drawableStateChanged() {
         super.drawableStateChanged();
-        animatePress(isPressed() ? 1f : 0f, isPressed() ? PRESS_DURATION : RELEASE_DURATION);
+        removeCallbacks(mRelease);
+        if (isPressed()) {
+            mPressedAt = android.os.SystemClock.elapsedRealtime();
+            animatePress(1f, PRESS_DURATION);
+        } else if (mPressedAt > 0) {
+            long elapsed = android.os.SystemClock.elapsedRealtime() - mPressedAt;
+            if (elapsed >= PRESS_DURATION) {
+                mRelease.run();
+            } else {
+                postDelayed(mRelease, PRESS_DURATION - elapsed);
+            }
+        }
     }
 
     private void animatePress(float target, long duration) {
